@@ -10,7 +10,7 @@ class Client;
 class channel
 {
     std::string Cname; // there are some conditions to respect in the naming phase
-    std::vector<std::string>  ddfd;
+    std::vector<std::string>  ddfd;// this would be the users insde a channel 
     
 };
 
