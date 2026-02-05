@@ -1,6 +1,4 @@
 #include "headers/server.hpp"
-#include <iostream>
-#include <cstdlib>
 
 int main(int ac, char **av)
 {
