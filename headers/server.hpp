@@ -2,11 +2,15 @@
 #define SERVER_HPP
 
 #include <map>
+#include <math.h>
+
+#include <cstring>
 #include <vector>
 #include <poll.h>
 #include <iostream>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 class Client;
 
