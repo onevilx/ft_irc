@@ -29,13 +29,12 @@ bool Client::hasCompleteCommand() const
 
 std::string Client::extractCommand()
 {
-    size_t pos = _buffer.find("\n");
+    size_t pos = _buffer.find("\n"); // ta hna hydtha !
     if (pos == std::string::npos)
         return "";
 
     std::string command = _buffer.substr(0, pos);
-    _buffer.erase(0, pos + 1); // remove command + "\r\n"
-
+    _buffer.erase(0, pos + 1); // remove command + "\r\n" hyedt \r hitash mkyninsh commands for now
     return command;
 }
 

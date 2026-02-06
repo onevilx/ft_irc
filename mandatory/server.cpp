@@ -87,6 +87,44 @@ void Server::acceptNewClient()
     std::cout << "[SERVER] Client connected (fd " << fd << ")" << std::endl;
 }
 
+IRCCommand parseCommandLine(const std::string& line)
+{
+    IRCCommand cmd;
+    std::string workingLine = line;
+    if (!workingLine.empty() && workingLine.back() == '\r')
+        workingLine.pop_back();
+
+    std::istringstream iss(workingLine);
+    std::string token;
+    if (!(iss >> cmd.command))
+        return cmd;
+
+    // IRC commands are case-insensitive → uppercase
+    std::transform(cmd.command.begin(), cmd.command.end(), cmd.command.begin(), ::toupper);
+    std::string param;
+    bool trailing = false;
+    std::string trailingStr;
+    while (iss >> param)
+    {
+        if (!trailing && param[0] == ':')
+        {
+            trailing = true;
+            trailingStr = param.substr(1);
+        }
+        else if (trailing)
+        {
+            trailingStr += " " + param;
+        }
+        else
+        {
+            cmd.args.push_back(param);
+        }
+    }
+    if (trailing)
+        cmd.args.push_back(trailingStr);
+    return cmd;
+}
+
 void Server::receiveData(int fd)
 {
     char buffer[1024];
@@ -104,10 +142,18 @@ void Server::receiveData(int fd)
 
     while (client->hasCompleteCommand())
     {
-        std::string cmd = client->extractCommand();
-        std::cout << "[CMD from " << fd << "] " << cmd << std::endl;
+        std::string line = client->extractCommand();
+        IRCCommand cmd = parseCommandLine(line);
 
-        // Later: parseCommand(client, cmd);
+        // For now: print structured command for your teammate man ba3d ghadi ngado replies
+        std::cout << "[PARSED] fd:" << client->getFd()
+                << " CMD:" << cmd.command << " ARGS:";
+        for (size_t i = 0; i < cmd.args.size(); i++)
+            std::cout << "{" << cmd.args[i] << "}";
+        std::cout << std::endl;
+
+        // chli7a implemente commands HEREEEEEEEEEEEEEEEEEEEEEEEE: 
+        // handleCommand(client, cmd);
     }
 }
 

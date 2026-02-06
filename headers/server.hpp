@@ -7,6 +7,14 @@
 #include <iostream>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <sstream>
+#include <algorithm>
+
+struct IRCCommand
+{
+    std::string command;           // "PRIVMSG"
+    std::vector<std::string> args; // list of arguments, trailing message included
+};
 
 class Client;
 
