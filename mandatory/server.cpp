@@ -1,16 +1,50 @@
 #include "../headers/server.hpp"
 #include "../headers/client.hpp"
+#include "../headers/commands.hpp"
 
-Server::Server(int port, const std::string& password) : _serverFd(-1), _port(port), _password(password)
+// -------------------- Helpers --------------------
+
+std::string Server::toUpper(const std::string& s)
+{
+    std::string out = s;
+    for (size_t i = 0; i < out.size(); ++i)
+        out[i] = (char)toupper((unsigned char)out[i]);
+    return out;
+}
+
+std::string Server::stripTrailingColon(const std::string& s)
+{
+    if (!s.empty() && s[s.size() - 1] == ':')
+        return s.substr(0, s.size() - 1);
+    return s;
+}
+
+Client* Server::findClientByNick(const std::string& nick) const
+{
+    if (nick.empty()) return NULL;
+    std::string want = toUpper(nick);
+    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        Client* c = it->second;
+        if (!c) continue;
+        const std::string &cnick = c->getNickname();
+        if (!cnick.empty() && toUpper(cnick) == want)
+            return c;
+    }
+    return NULL;
+}
+
+// -------------------- Server Constructor / Destructor --------------------
+
+Server::Server(int port, const std::string& password)
+    : _serverFd(-1), _port(port), _password(password)
 {
     _serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverFd < 0)
-        throw std::runtime_error("socket() failed");
+        throw std::runtime_error("socket failed");
 
     int opt = 1;
-    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-        throw std::runtime_error("setsockopt() failed");
-
+    setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     fcntl(_serverFd, F_SETFL, O_NONBLOCK);
 
     sockaddr_in addr;
@@ -20,31 +54,26 @@ Server::Server(int port, const std::string& password) : _serverFd(-1), _port(por
     addr.sin_port = htons(_port);
 
     if (bind(_serverFd, (sockaddr*)&addr, sizeof(addr)) < 0)
-        throw std::runtime_error("bind() failed");
-
+        throw std::runtime_error("bind failed");
     if (listen(_serverFd, SOMAXCONN) < 0)
-        throw std::runtime_error("listen() failed");
+        throw std::runtime_error("listen failed");
 
     pollfd pfd;
     pfd.fd = _serverFd;
     pfd.events = POLLIN;
     _pollFds.push_back(pfd);
 
-    std::cout << "[SERVER] Listening on port " << _port << std::endl;
+    std::cout << "[SERVER] Listening on " << _port << std::endl;
 }
 
 Server::~Server()
 {
-    for (std::map<int, Client*>::iterator it = _clients.begin();
-         it != _clients.end(); ++it)
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
         delete it->second;
     close(_serverFd);
 }
 
-int Server::getServerFd() const { return _serverFd; }
-int Server::getPort() const { return _port; }
-const std::string& Server::getPassword() const { return _password; }
-std::map<int, Client*>& Server::getClients() { return _clients; }
+// -------------------- Main Loop --------------------
 
 void Server::run()
 {
@@ -66,12 +95,11 @@ void Server::run()
     }
 }
 
+// -------------------- Client Handling --------------------
+
 void Server::acceptNewClient()
 {
-    sockaddr_in addr;
-    socklen_t len = sizeof(addr);
-
-    int fd = accept(_serverFd, (sockaddr*)&addr, &len);
+    int fd = accept(_serverFd, NULL, NULL);
     if (fd < 0)
         return;
 
@@ -83,54 +111,14 @@ void Server::acceptNewClient()
     _pollFds.push_back(pfd);
 
     _clients[fd] = new Client(fd);
-
-    std::cout << "[SERVER] Client connected (fd " << fd << ")" << std::endl;
-}
-
-IRCCommand parseCommandLine(const std::string& line)
-{
-    IRCCommand cmd;
-    std::string workingLine = line;
-    if (!workingLine.empty() && workingLine.back() == '\r')
-        workingLine.pop_back();
-
-    std::istringstream iss(workingLine);
-    std::string token;
-    if (!(iss >> cmd.command))
-        return cmd;
-
-    // IRC commands are case-insensitive → uppercase
-    std::transform(cmd.command.begin(), cmd.command.end(), cmd.command.begin(), ::toupper);
-    std::string param;
-    bool trailing = false;
-    std::string trailingStr;
-    while (iss >> param)
-    {
-        if (!trailing && param[0] == ':')
-        {
-            trailing = true;
-            trailingStr = param.substr(1);
-        }
-        else if (trailing)
-        {
-            trailingStr += " " + param;
-        }
-        else
-        {
-            cmd.args.push_back(param);
-        }
-    }
-    if (trailing)
-        cmd.args.push_back(trailingStr);
-    return cmd;
+    std::cout << "[CONNECT] fd " << fd << std::endl;
 }
 
 void Server::receiveData(int fd)
 {
     char buffer[1024];
-    std::memset(buffer, 0, sizeof(buffer));
-
     ssize_t bytes = recv(fd, buffer, sizeof(buffer) - 1, 0);
+
     if (bytes <= 0)
     {
         removeClient(fd);
@@ -138,29 +126,134 @@ void Server::receiveData(int fd)
     }
 
     Client* client = _clients[fd];
-    client->appendBuffer(buffer);
+    client->appendBuffer(std::string(buffer, bytes));
 
     while (client->hasCompleteCommand())
     {
-        std::string line = client->extractCommand();
-        IRCCommand cmd = parseCommandLine(line);
-
-        // For now: print structured command for your teammate man ba3d ghadi ngado replies
-        std::cout << "[PARSED] fd:" << client->getFd()
-                << " CMD:" << cmd.command << " ARGS:";
-        for (size_t i = 0; i < cmd.args.size(); i++)
-            std::cout << "{" << cmd.args[i] << "}";
-        std::cout << std::endl;
-
-        // chli7a implemente commands HEREEEEEEEEEEEEEEEEEEEEEEEE: 
-        // handleCommand(client, cmd);
+        Commands cmd(client->extractCommand());
+        handleCommand(client, cmd);
     }
 }
 
+// -------------------- Command Handling --------------------
+
+void Server::handleCommand(Client* client, Commands& cmd)
+{
+    if (!client->isAuthenticated())
+    {
+        handleAuth(client, cmd);
+        return;
+    }
+
+    const std::string& command = cmd.getCommand();
+    const std::vector<std::string>& args = cmd.getArgs();
+
+    if (command == "PING")
+    {
+        if (!args.empty())
+        {
+            std::string pong = "PONG server " + args[0] + "\r\n";
+            send(client->getFd(), pong.c_str(), pong.size(), 0);
+        }
+    }
+    else if (command == "PRIVMSG")
+    {
+        if (args.size() < 2)
+        {
+            std::string err = ":server 411 " + client->getNickname() + " :No recipient given\r\n";
+            send(client->getFd(), err.c_str(), err.size(), 0);
+            return;
+        }
+
+        std::string targetNick = stripTrailingColon(args[0]);
+        std::string message = args[1];
+
+        Client* target = findClientByNick(targetNick);
+        if (!target)
+        {
+            std::string err = ":server 401 " + client->getNickname() + " " + targetNick + " :No such nick\r\n";
+            send(client->getFd(), err.c_str(), err.size(), 0);
+        }
+        else
+        {
+            std::string msg = ":" + client->getNickname() + "!" + client->getUsername() +
+                              "@localhost PRIVMSG " + targetNick + " :" + message + "\r\n";
+            send(target->getFd(), msg.c_str(), msg.size(), 0);
+        }
+    }
+    else
+    {
+        std::string err = ":server 421 " + client->getNickname() + " " + command + " :Unknown command\r\n";
+        send(client->getFd(), err.c_str(), err.size(), 0);
+    }
+
+    std::cout << "[CMD] " << command << " from fd " << client->getFd() << std::endl;
+}
+
+// -------------------- Authentication --------------------
+
+void Server::handleAuth(Client* client, Commands& cmd)
+{
+    const std::string& c = cmd.getCommand();
+    const std::vector<std::string>& a = cmd.getArgs();
+
+    if (c == "PASS")
+    {
+        if (a.empty() || a[0] != _password)
+        {
+            send(client->getFd(), "ERROR :Bad password\r\n", 22, 0);
+            removeClient(client->getFd());
+            return;
+        }
+        client->setPassOk();
+    }
+    else if (c == "NICK")
+    {
+        if (!a.empty())
+        {
+            std::string requested = stripTrailingColon(a[0]);
+            Client* existing = findClientByNick(requested);
+            if (existing && existing != client)
+            {
+                std::string msg = ":server 433 * " + requested + " :Nickname is already in use\r\n";
+                send(client->getFd(), msg.c_str(), msg.size(), 0);
+            }
+            else
+            {
+                client->setNickname(requested);
+                client->setNickOk();
+            }
+        }
+    }
+    else if (c == "USER")
+    {
+        if (!a.empty())
+        {
+            client->setUsername(a[0]);
+            client->setUserOk();
+        }
+    }
+    else
+    {
+        std::string msg = ":server 451 " + client->getNickname() + " :You are not registered\r\n";
+        send(client->getFd(), msg.c_str(), msg.size(), 0);
+        return;
+    }
+
+    client->tryAuthenticate();
+
+    if (client->isAuthenticated())
+    {
+        std::string welcome = ":server 001 " + client->getNickname() + " :Welcome to the IRC Network, " + client->getNickname() + "\r\n";
+        send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+        std::cout << "[AUTH] fd " << client->getFd() << " authenticated" << std::endl;
+    }
+}
+
+// -------------------- Disconnect --------------------
+
 void Server::removeClient(int fd)
 {
-    std::cout << "[SERVER] Client disconnected (fd " << fd << ")" << std::endl;
-
     for (size_t i = 0; i < _pollFds.size(); i++)
     {
         if (_pollFds[i].fd == fd)
@@ -170,6 +263,12 @@ void Server::removeClient(int fd)
         }
     }
 
-    delete _clients[fd];
-    _clients.erase(fd);
+    if (_clients.count(fd))
+    {
+        close(fd);
+        delete _clients[fd];
+        _clients.erase(fd);
+    }
+
+    std::cout << "[DISCONNECT] fd " << fd << std::endl;
 }
