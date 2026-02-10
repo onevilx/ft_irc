@@ -16,7 +16,7 @@ private:
     bool        _passOk;
     bool        _nickOk;
     bool        _userOk;
-    bool        _authenticated;
+    bool        _authenticated;qecvtq
 
 public:
     Client(int fd);
