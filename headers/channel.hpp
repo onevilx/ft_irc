@@ -54,7 +54,7 @@ class Channel
 
     // normal setters
     std::string set_Cname();
-    std::string set_topic();
+    std::string set_topic(std::string topic);
     std::string set_topic_setter();
     std::string set_topic_time();
     std::string set_Ctime();
@@ -69,6 +69,10 @@ class Channel
     std::string get_topic_setter();
     std::string get_topic_time();
     std::string get_Ctime();
+
+    // channel methods 
+    void add_to_channel(Client *client, std::string key);
+    void remove_from_channel(Client *client);
 
 
 
