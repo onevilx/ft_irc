@@ -156,6 +156,8 @@ void Server::handleCommand(Client* client, Commands& cmd)
             send(client->getFd(), pong.c_str(), pong.size(), 0);
         }
     }
+    else if (command == "JOIN")
+        join(client, cmd);
     else if (command == "PRIVMSG")
     {
         if (args.size() < 2)

@@ -17,3 +17,5 @@ bool check_channel_prefix(std::string Cname){
         return "walla a sa7bi ";
 }
 
+// std::string Channel::get_Cname
+

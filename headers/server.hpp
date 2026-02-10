@@ -3,7 +3,8 @@
 
 #include <map>
 #include <math.h>
-
+#include "channel.hpp"
+#include "commands.hpp"
 #include <cstring>
 #include <vector>
 #include <poll.h>
@@ -14,6 +15,7 @@
 
 class Commands;
 class Client;
+class Channel;
 
 class Server
 {
@@ -23,6 +25,7 @@ class Server
     std::string                 _password;
     std::vector<struct pollfd>  _pollFds;
     std::map<int, Client*>      _clients;
+    std::vector< Channel * > channels; // here is the channels inside a server
 
     void    acceptNewClient();
     void    receiveData(int fd);
@@ -39,6 +42,13 @@ class Server
     ~Server();
 
     void    run();
+    //big boss
+    void join(Client *client, Commands cmd);
+    // dazai's method to validate the addition of a channel so i can look for 
+    //the name of channels inside a server
+    bool exists(std::string name);
+    // here i will be creating channels;
+    Channel* creat_channel();
 };
 
 #endif
