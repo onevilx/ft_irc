@@ -171,9 +171,12 @@ void Server::handleCommand(Client* client, Commands& cmd)
         }
         return;
     }
-
+    else if(command == "JOIN" || command == "join"){
+        std::cout << "join..........................." << std::endl;
+        join(client, cmd);
+    }
     // ---------- PING ----------
-    if (command == "PING")
+    else if (command == "PING")
     {
         if (!args.empty())
         {
@@ -224,6 +227,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         send(target->getFd(), msg.c_str(), msg.size(), 0);
         return;
     }
+    else {
 
     // ---------- UNKNOWN COMMAND ----------
     std::string err = ERROR_UNKNOWNCOMMAND(
@@ -232,6 +236,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         command
     );
     send(client->getFd(), err.c_str(), err.size(), 0);
+    }
 }
 
 // -------------------- Authentication --------------------

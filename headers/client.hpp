@@ -9,6 +9,7 @@
 class Client
 {
 private:
+    std::string _hostname;
     int         _fd;
     std::string _nickname;
     std::string _username;
@@ -25,6 +26,7 @@ public:
     ~Client();
 
     int         getFd() const;
+    std::string gethostname();
     bool        isAuthenticated() const;
     void        appendBuffer(const std::string& data);
     bool        hasCompleteCommand() const;

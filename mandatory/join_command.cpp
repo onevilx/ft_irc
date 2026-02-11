@@ -1,6 +1,7 @@
 #include "../headers/channel.hpp"
 #include "../headers/client.hpp"
 #include "../headers/server.hpp"
+#include "../headers/replies.hpp"
 // #include "../headers/commands.hpp"
 
 bool Server::exists(std::string name) {
@@ -40,11 +41,6 @@ void Server::channel_msg(Client *user, const std::string msg, std::string Cname)
 void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
-
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        std::cout << args[i] << "ff" << std::endl;
-    }
     
 
     std::stringstream ss(args[0]);
@@ -74,10 +70,10 @@ void Server::join(Client *client, Commands cmd){
             return ; // error to be aaded later;
         // here i wil check for the channel presence 
        if(exists(name)){
+        std::cout << "---------------existed case---------" << std::endl;
         // here i wont creat it so i will just add the user to it under the requirements to set later
        }
        else{
-        std::cout << "feefefef" << std::endl;
         // here the meat
         // i will creat the channel and add the user to it 
         Channel* newChannel = new Channel(name, "");
@@ -91,11 +87,9 @@ void Server::join(Client *client, Commands cmd){
 
             std::cout << channels[i]->get_Cname() << std::endl;
         }
-        
-
         // replys basedon the rfc
         // initJOINReply(client, newChannel);
-        // channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(),), name);
+        channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->gethostname()), name);
         // 
         }
     }

@@ -14,6 +14,10 @@ Client::~Client()
 
 // -------------------- Getters --------------------
 
+std::string Client::gethostname(){
+    return this->_hostname;
+}
+
 int Client::getFd() const
 {
     return _fd;
