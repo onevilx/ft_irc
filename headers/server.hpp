@@ -24,7 +24,7 @@ class Server
     int                         _port;
     std::string                 _password;
     std::vector<struct pollfd>  _pollFds;
-    std::map<int, Client*>      _clients;
+    std::map<int, Client*>      _clients; // khoya chre7 liya 3lach katsavihom as map 
     std::vector< Channel * > channels; // here is the channels inside a server
 
     void    acceptNewClient();

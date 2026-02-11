@@ -16,7 +16,9 @@ private:
     bool        _passOk;
     bool        _nickOk;
     bool        _userOk;
-    bool        _authenticated;qecvtq
+    bool        _authenticated;
+    bool        _isop;
+
 
 public:
     Client(int fd);
@@ -37,6 +39,8 @@ public:
     void        setNickOk();
     void        setUserOk();
     void        tryAuthenticate();
+
+    void        set_operator(bool status);
 };
 
 #endif

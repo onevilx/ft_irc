@@ -156,8 +156,10 @@ void Server::handleCommand(Client* client, Commands& cmd)
             send(client->getFd(), pong.c_str(), pong.size(), 0);
         }
     }
-    else if (command == "JOIN")
+    else if (command == "JOIN"){
+        // std::cout << "------------------/join /---------------" <<  std::endl;
         join(client, cmd);
+    }
     else if (command == "PRIVMSG")
     {
         if (args.size() < 2)
@@ -166,7 +168,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
         }
-
         std::string targetNick = stripTrailingColon(args[0]);
         std::string message = args[1];
 

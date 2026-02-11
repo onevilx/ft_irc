@@ -108,3 +108,8 @@ void Client::tryAuthenticate()
     if (_passOk && _nickOk && _userOk)
         _authenticated = true;
 }
+
+
+void Client::set_operator(bool status){
+    this->_isop = status;
+}
