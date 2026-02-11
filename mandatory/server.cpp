@@ -1,6 +1,7 @@
 #include "../headers/server.hpp"
 #include "../headers/client.hpp"
 #include "../headers/commands.hpp"
+#include "../headers/replies.hpp"
 
 // -------------------- Helpers --------------------
 
@@ -14,21 +15,24 @@ std::string Server::toUpper(const std::string& s)
 
 std::string Server::stripTrailingColon(const std::string& s)
 {
-    if (!s.empty() && s[s.size() - 1] == ':')
-        return s.substr(0, s.size() - 1);
+    if (!s.empty() && s[0] == ':')
+        return s.substr(1);
     return s;
 }
 
 Client* Server::findClientByNick(const std::string& nick) const
 {
-    if (nick.empty()) return NULL;
+    if (nick.empty())
+        return NULL;
+
     std::string want = toUpper(nick);
     for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
         Client* c = it->second;
-        if (!c) continue;
-        const std::string &cnick = c->getNickname();
-        if (!cnick.empty() && toUpper(cnick) == want)
+        if (!c)
+            continue;
+        if (!c->getNickname().empty() &&
+            toUpper(c->getNickname()) == want)
             return c;
     }
     return NULL;
@@ -80,9 +84,9 @@ void Server::run()
     while (true)
     {
         if (poll(&_pollFds[0], _pollFds.size(), -1) < 0)
-            throw std::runtime_error("poll() failed");
+            throw std::runtime_error("poll failed");
 
-        for (size_t i = 0; i < _pollFds.size(); i++)
+        for (size_t i = 0; i < _pollFds.size(); ++i)
         {
             if (_pollFds[i].revents & POLLIN)
             {
@@ -145,58 +149,89 @@ void    Server::sendToclient(int fd, std::string msg){
 
 void Server::handleCommand(Client* client, Commands& cmd)
 {
-    if (!client->isAuthenticated())
-    {
-        handleAuth(client, cmd);
-        return;
-    }
-
     const std::string& command = cmd.getCommand();
     const std::vector<std::string>& args = cmd.getArgs();
 
+    // ---------- UNREGISTERED CLIENT ----------
+    if (!client->isAuthenticated())
+    {
+        if (command == "PASS" || command == "NICK" || command == "USER")
+        {
+            handleAuth(client, cmd);
+        }
+        else
+        {
+            // Unknown command before registration
+            std::string err = ERROR_UNKNOWNCOMMAND(
+                client->getNickname(),
+                std::string("server"),
+                command
+            );
+            send(client->getFd(), err.c_str(), err.size(), 0);
+        }
+        return;
+    }
+
+    // ---------- PING ----------
     if (command == "PING")
     {
         if (!args.empty())
         {
-            std::string pong = "PONG server " + args[0] + "\r\n";
+            std::string pong = "PONG :" + args[0] + "\r\n";
             send(client->getFd(), pong.c_str(), pong.size(), 0);
         }
-    }
-    else if (command == "JOIN"){
-        // std::cout << "------------------/join /---------------" <<  std::endl;
-        join(client, cmd);
+        return;
     }
     else if (command == "PRIVMSG")
     {
+        if (args.empty())
+        {
+            std::string err =
+                ":" + std::string("server") +
+                " 411 " + client->getNickname() +
+                " PRIVMSG :No recipient given\r\n";
+            send(client->getFd(), err.c_str(), err.size(), 0);
+            return;
+        }
+
         if (args.size() < 2)
         {
-            std::string err = ":server 411 " + client->getNickname() + " :No recipient given\r\n";
+            std::string err = ERR_NOTEXTTOSEND(std::string("server"));
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
         }
         std::string targetNick = stripTrailingColon(args[0]);
-        std::string message = args[1];
+        std::string message    = args[1];
 
         Client* target = findClientByNick(targetNick);
         if (!target)
         {
-            std::string err = ":server 401 " + client->getNickname() + " " + targetNick + " :No such nick\r\n";
+            std::string err = ERR_NOSUCHNICK(
+                std::string("server"),
+                targetNick
+            );
             send(client->getFd(), err.c_str(), err.size(), 0);
+            return;
         }
-        else
-        {
-            std::string msg = ":" + client->getNickname() + "!" + client->getUsername() +
-                              "@localhost PRIVMSG " + targetNick + " :" + message + "\r\n";
-            send(target->getFd(), msg.c_str(), msg.size(), 0);
-        }
-    }
-    else
-    {
-        std::string err = ":server 421 " + client->getNickname() + " " + command + " :Unknown command\r\n";
-        send(client->getFd(), err.c_str(), err.size(), 0);
+
+        std::string msg = PRIVMSG_FORMAT(
+            client->getNickname(),
+            client->getUsername(),
+            "localhost",
+            targetNick,
+            message
+        );
+        send(target->getFd(), msg.c_str(), msg.size(), 0);
+        return;
     }
 
-    std::cout << "[CMD] " << command << " from fd " << client->getFd() << std::endl;
+    // ---------- UNKNOWN COMMAND ----------
+    std::string err = ERROR_UNKNOWNCOMMAND(
+        client->getNickname(),
+        std::string("server"),
+        command
+    );
+    send(client->getFd(), err.c_str(), err.size(), 0);
 }
 
 // -------------------- Authentication --------------------
@@ -210,7 +245,11 @@ void Server::handleAuth(Client* client, Commands& cmd)
     {
         if (a.empty() || a[0] != _password)
         {
-            send(client->getFd(), "ERROR :Bad password\r\n", 22, 0);
+            std::string err = ERROR_PASSWDMISMATCH(
+                std::string("*"),
+                std::string("server")
+            );
+            send(client->getFd(), err.c_str(), err.size(), 0);
             removeClient(client->getFd());
             return;
         }
@@ -218,34 +257,36 @@ void Server::handleAuth(Client* client, Commands& cmd)
     }
     else if (c == "NICK")
     {
-        if (!a.empty())
+        if (a.empty())
+            return;
+
+        std::string requested = stripTrailingColon(a[0]);
+        Client* existing = findClientByNick(requested);
+        if (existing && existing != client)
         {
-            std::string requested = stripTrailingColon(a[0]);
-            Client* existing = findClientByNick(requested);
-            if (existing && existing != client)
-            {
-                std::string msg = ":server 433 * " + requested + " :Nickname is already in use\r\n";
-                send(client->getFd(), msg.c_str(), msg.size(), 0);
-            }
-            else
-            {
-                client->setNickname(requested);
-                client->setNickOk();
-            }
+            std::string err = ERROR_NICKNAMEINUSE(
+                std::string("*"),
+                std::string("server")
+            );
+            send(client->getFd(), err.c_str(), err.size(), 0);
         }
+        else
+            client->setNickname(requested);
     }
     else if (c == "USER")
     {
-        if (!a.empty())
-        {
-            client->setUsername(a[0]);
-            client->setUserOk();
-        }
+        if (a.empty())
+            return;
+
+        client->setUsername(a[0]);
     }
     else
     {
-        std::string msg = ":server 451 " + client->getNickname() + " :You are not registered\r\n";
-        send(client->getFd(), msg.c_str(), msg.size(), 0);
+        std::string err = ERROR_NOTREGISTERED(
+            client->getNickname(),
+            std::string("server")
+        );
+        send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
 
@@ -253,8 +294,14 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
     if (client->isAuthenticated())
     {
-        std::string welcome = ":server 001 " + client->getNickname() + " :Welcome to the IRC Network, " + client->getNickname() + "\r\n";
+        std::string nick = client->getNickname();
+
+        std::string welcome = REPLY_WELCOME(nick, std::string("server"));
         send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+
+        std::string yourhost = REPLY_YOURHOST(nick, std::string("server"));
+        send(client->getFd(), yourhost.c_str(), yourhost.size(), 0);
+
         std::cout << "[AUTH] fd " << client->getFd() << " authenticated" << std::endl;
     }
 }
@@ -263,7 +310,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
 void Server::removeClient(int fd)
 {
-    for (size_t i = 0; i < _pollFds.size(); i++)
+    for (size_t i = 0; i < _pollFds.size(); ++i)
     {
         if (_pollFds[i].fd == fd)
         {
