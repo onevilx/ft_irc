@@ -3,6 +3,7 @@
 
 
 #include "client.hpp"
+#include <iostream>
 #include <vector>
 // here ineed a client class 
 class Client;
@@ -32,6 +33,7 @@ class Channel
     size_t limit; // this will be trigred if the l is setted as true 
 
     public:
+    std::vector<Client *> get_ClientsinChannel();
     // canonical form 
     Channel();
     Channel(std::string name, std::string key);
@@ -58,6 +60,7 @@ class Channel
     std::string set_topic_time();
     std::string set_Ctime();
 
+    void init_modes();
     // getters
     bool get_k();
     bool get_i();

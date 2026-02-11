@@ -13,6 +13,9 @@
         return t;
     }
 
+std::vector<Client *> Channel::get_ClientsinChannel(){
+    return this->Clients;
+}
 
 bool channel_nrestriction(std::string str){
     for (int i; i < str.length(); i++)
@@ -33,6 +36,7 @@ bool Channel::addtoChannel(Client *client, std::string key){
         return false;
     if(get_k() == true){
         // later
+        std::cout << "key required" << std::endl;
     }
     bool shoulbeop = Clients.empty();
     // here i need to set it as operator if the house is empty
@@ -55,3 +59,22 @@ std::string Channel::get_Cname(){
     return this->Cname;
 }
 
+void Channel::init_modes(){
+    this->l = false;
+    this->i = false;
+    this->t = false;
+}
+
+Channel::Channel(){
+    this->key = "";
+    init_modes();
+}
+Channel::Channel(std::string name, std::string pas): Cname(name), key(pas){
+    init_modes();
+}
+Channel::Channel(const Channel& copy){
+
+}
+Channel::~Channel(){
+
+} 

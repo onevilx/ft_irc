@@ -24,7 +24,7 @@ class Server
     int                         _port;
     std::string                 _password;
     std::vector<struct pollfd>  _pollFds;
-    std::map<int, Client*>      _clients; // khoya chre7 liya 3lach katsavihom as map 
+    std::map<int, Client *>      _clients; // khoya chre7 liya 3lach katsavihom as map 
     std::vector< Channel * > channels; // here is the channels inside a server
 
     void    acceptNewClient();
@@ -35,7 +35,8 @@ class Server
     Client* findClientByNick(const std::string& nick) const;
     static std::string toUpper(const std::string& s);
     static std::string stripTrailingColon(const std::string& s);
-
+    void    channel_msg(Client *user, const std::string msg, std::string Cname);
+    void    sendToclient(int fd, std::string msg);
 
     public:
     Server(int port, const std::string& password);

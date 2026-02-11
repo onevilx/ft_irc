@@ -135,6 +135,12 @@ void Server::receiveData(int fd)
     }
 }
 
+
+
+void    Server::sendToclient(int fd, std::string msg){
+    if(send(fd, msg.c_str(), msg.length(), 0) == 1)
+        return ;
+}
 // -------------------- Command Handling --------------------
 
 void Server::handleCommand(Client* client, Commands& cmd)

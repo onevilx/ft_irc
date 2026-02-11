@@ -24,6 +24,19 @@ std::vector<std::string> split(std::string args, std::string delimiter){
     return res;
 }
 
+void Server::channel_msg(Client *user, const std::string msg, std::string Cname){
+    for(std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it){
+        if((*it)->get_Cname() == Cname)
+            for (size_t i = 0; i < (*it)->get_ClientsinChannel().size(); i++)
+        {
+            // so the logic here i will send the join message to any client
+            // in the channel excepts the current joining client
+            if((*it)->get_ClientsinChannel()[i]->getNickname()  != user->getNickname())
+                    sendToclient((*it)->get_ClientsinChannel()[i]->getFd(), msg);// send the message
+        }
+    }
+}
+
 void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
@@ -64,6 +77,7 @@ void Server::join(Client *client, Commands cmd){
         // here i wont creat it so i will just add the user to it under the requirements to set later
        }
        else{
+        std::cout << "feefefef" << std::endl;
         // here the meat
         // i will creat the channel and add the user to it 
         Channel* newChannel = new Channel(name, "");
@@ -71,10 +85,17 @@ void Server::join(Client *client, Commands cmd){
         if(!newChannel->addtoChannel(client, ""))
             continue;  
         channels.push_back(newChannel);
+        std::cout << "--------------------channels--------------------" << std::endl;
+        for (size_t i = 0; i < channels.size(); i++)
+        {
+
+            std::cout << channels[i]->get_Cname() << std::endl;
+        }
+        
 
         // replys basedon the rfc
         // initJOINReply(client, newChannel);
-        // sendToChannel(client, REPLY_JOIN(client->getNickname(), client->getUsername(),));
+        // channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(),), name);
         // 
         }
     }
