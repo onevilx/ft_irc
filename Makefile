@@ -1,9 +1,9 @@
 NAME = ircserv
 CC = c++
 RM = rm -f
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98
-SOURCES = mandatory/client.cpp mandatory/server.cpp main.cpp
-INCLUDES = headers/client.hpp headers/server.hpp
+CPPFLAGS = 
+SOURCES = mandatory/client.cpp mandatory/server.cpp mandatory/commands.cpp main.cpp mandatory/join_command.cpp mandatory/channel.cpp
+INCLUDES = headers/client.hpp headers/server.hpp headers/commands.hpp headers/channel.hpp 
 
 OBJ = $(SOURCES:.cpp=.opp)
 

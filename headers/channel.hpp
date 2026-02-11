@@ -47,7 +47,6 @@ class Channel
 
     void set_i_off();
     void set_k_off();
-    void set_k_off();
     void set_l_off();
     void set_t_off();
     
@@ -60,22 +59,19 @@ class Channel
     std::string set_Ctime();
 
     // getters
-    void get_k();
-    void get_i();
-    void get_l();
-    void get_l();
+    bool get_k();
+    bool get_i();
+    bool get_l();
+    bool get_t();
     std::string get_Cname();
     std::string get_topic();
     std::string get_topic_setter();
     std::string get_topic_time();
     std::string get_Ctime();
 
-    // channel methods 
-    void add_to_channel(Client *client, std::string key);
-    void remove_from_channel(Client *client);
-
-
-
+    bool addtoChannel(Client *Client, std::string key);
+    
+    
 
 
 };
