@@ -149,10 +149,12 @@ void    Server::sendToclient(int fd, std::string msg){
 
 void Server::handleCommand(Client* client, Commands& cmd)
 {
-    const std::string& command = cmd.getCommand();
+    std::string command = toUpper(cmd.getCommand());
     const std::vector<std::string>& args = cmd.getArgs();
 
-    // ---------- UNREGISTERED CLIENT ----------
+    // ===============================
+    // UNREGISTERED CLIENT
+    // ===============================
     if (!client->isAuthenticated())
     {
         if (command == "PASS" || command == "NICK" || command == "USER")
@@ -161,22 +163,28 @@ void Server::handleCommand(Client* client, Commands& cmd)
         }
         else
         {
-            // Unknown command before registration
-            std::string err = ERROR_UNKNOWNCOMMAND(
-                client->getNickname(),
-                std::string("server"),
-                command
+            std::string err = ERROR_NOTREGISTERED(
+                std::string("*"),
+                std::string("server")
             );
             send(client->getFd(), err.c_str(), err.size(), 0);
         }
         return;
     }
-    else if(command == "JOIN" || command == "join"){
-        std::cout << "join..........................." << std::endl;
+
+    // ===============================
+    // REGISTERED CLIENT
+    // ===============================
+
+    // ---------- JOIN ----------
+    if (command == "JOIN")
+    {
         join(client, cmd);
+        return;
     }
+
     // ---------- PING ----------
-    else if (command == "PING")
+    if (command == "PING")
     {
         if (!args.empty())
         {
@@ -185,7 +193,9 @@ void Server::handleCommand(Client* client, Commands& cmd)
         }
         return;
     }
-    else if (command == "PRIVMSG")
+
+    // ---------- PRIVMSG ----------
+    if (command == "PRIVMSG")
     {
         if (args.empty())
         {
@@ -227,7 +237,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
         send(target->getFd(), msg.c_str(), msg.size(), 0);
         return;
     }
-    else {
 
     // ---------- UNKNOWN COMMAND ----------
     std::string err = ERROR_UNKNOWNCOMMAND(
@@ -236,7 +245,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
         command
     );
     send(client->getFd(), err.c_str(), err.size(), 0);
-    }
 }
 
 // -------------------- Authentication --------------------
@@ -255,7 +263,6 @@ void Server::handleAuth(Client* client, Commands& cmd)
                 std::string("server")
             );
             send(client->getFd(), err.c_str(), err.size(), 0);
-            removeClient(client->getFd());
             return;
         }
         client->setPassOk();
@@ -280,10 +287,20 @@ void Server::handleAuth(Client* client, Commands& cmd)
     }
     else if (c == "USER")
     {
-        if (a.empty())
+        if (a.size() < 4)
+        {
+            std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), "USER");
+            send(client->getFd(), msg.c_str(), msg.size(), 0);
             return;
-
+        }
         client->setUsername(a[0]);
+        client->setHostname(a[1]);
+        client->setServername(a[2]);
+
+        std::string realname = a[3];
+        if (!realname.empty() && realname[0] == ':')
+            realname = realname.substr(1);
+        client->setRealname(realname);
     }
     else
     {

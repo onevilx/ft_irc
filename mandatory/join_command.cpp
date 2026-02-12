@@ -89,7 +89,7 @@ void Server::join(Client *client, Commands cmd){
         }
         // replys basedon the rfc
         // initJOINReply(client, newChannel);
-        channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->gethostname()), name);
+        channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname()), name);
         // 
         }
     }
