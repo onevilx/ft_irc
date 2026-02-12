@@ -82,14 +82,14 @@ void Server::join(Client *client, Commands cmd){
         std::string name = args[0];
         if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos){
             // std::cout << "prefix error" << std::endl;
-            std::string msg = ERROR_NOSUCHCHANNEL(client->gethostname(), name, client->getNickname());
+            std::string msg = ERROR_NOSUCHCHANNEL(client->getHostname(), name, client->getNickname());
             send(client->getFd(), msg.c_str(), msg.length(), 0);
             return ; // error to be aaded later;
         }
         // here i wil check for the channel presence 
        if(exists(name)){
             if(isClinetinChannel(client, name)){
-                std::string msg = ERROR_USERONCHANNEL(client->gethostname(), name, client->getNickname());
+                std::string msg = ERROR_USERONCHANNEL(client->getHostname(), name, client->getNickname());
                 send(client->getFd(), msg.c_str(), msg.length(), 0);
                 return ;
             }
@@ -114,7 +114,7 @@ void Server::join(Client *client, Commands cmd){
         }
         // replys basedon the rfc
         // initJOINReply(client, newChannel);
-        // channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->gethostname()), name);
+        channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname()), name);
         // 
         }
     }
