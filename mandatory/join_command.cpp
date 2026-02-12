@@ -95,6 +95,19 @@ void Server::join(Client *client, Commands cmd){
             }
             else{
                 // here i will ad the client to the channel
+                // so here i will add the client in the chanel_clinets container aftr that i will send the join message to every client except the current client
+                for (std::vector<Channel*>::iterator iter1 = channels.begin(); iter1 != channels.end(); iter1++){
+                    if((*iter1)->get_Cname() == name){
+                        (*iter1)->addtoChannel(client, "");
+                        std::string msg = REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname());
+                        for (std::vector<Client*>::iterator c = (*iter1)->get_ClientsinChannel().begin(); c != (*iter1)->get_ClientsinChannel().end(); c++)
+                        {
+                            if((*c)->getFd() != client->getFd())
+                                send((*c)->getFd(), msg.c_str(), msg.length(), 0);
+                        }
+                    }
+                }
+                
             }
         
        }
@@ -109,7 +122,7 @@ void Server::join(Client *client, Commands cmd){
         std::cout << "--------------------channels--------------------" << std::endl;
         for (size_t i = 0; i < channels.size(); i++)
         {
-
+            
             std::cout << channels[i]->get_Cname() << std::endl;
         }
         // replys basedon the rfc
