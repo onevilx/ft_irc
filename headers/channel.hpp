@@ -33,7 +33,7 @@ class Channel
     size_t limit; // this will be trigred if the l is setted as true 
 
     public:
-    std::vector<Client *> get_ClientsinChannel();
+    std::vector<Client *>& get_ClientsinChannel();
     // canonical form 
     Channel();
     Channel(std::string name, std::string key);

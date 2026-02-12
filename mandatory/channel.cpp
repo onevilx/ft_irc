@@ -13,7 +13,7 @@
         return t;
     }
 
-std::vector<Client *> Channel::get_ClientsinChannel(){
+std::vector<Client *>& Channel::get_ClientsinChannel(){
     return this->Clients;
 }
 

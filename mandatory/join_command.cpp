@@ -38,6 +38,20 @@ void Server::channel_msg(Client *user, const std::string msg, std::string Cname)
     }
 }
 
+bool    Server::isClinetinChannel(Client *user, std::string name){
+        for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); it++)
+        {
+            for (std::vector<Client*>::iterator iter = (*it)->get_ClientsinChannel().begin(); iter != (*it)->get_ClientsinChannel().end(); iter++)
+            {
+                if((*iter)->getFd() == user->getFd())
+                    // // here the mesage of the clinet is already in the channel
+                    // std::cout << "rah deja kayn had khona " << std::endl;
+                    return true;
+            }
+        }
+        return false;
+}
+
 void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
@@ -66,12 +80,23 @@ void Server::join(Client *client, Commands cmd){
    for (std::vector<std::string>::iterator it = Cnames.begin(); it != Cnames.end(); ++it){
     if(args.size() == 1){
         std::string name = args[0];
-        if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos)
+        if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos){
+            // std::cout << "prefix error" << std::endl;
+            std::string msg = ERROR_NOSUCHCHANNEL(client->gethostname(), name, client->getNickname());
+            send(client->getFd(), msg.c_str(), msg.length(), 0);
             return ; // error to be aaded later;
+        }
         // here i wil check for the channel presence 
        if(exists(name)){
-        std::cout << "---------------existed case---------" << std::endl;
-        // here i wont creat it so i will just add the user to it under the requirements to set later
+            if(isClinetinChannel(client, name)){
+                std::string msg = ERROR_USERONCHANNEL(client->gethostname(), name, client->getNickname());
+                send(client->getFd(), msg.c_str(), msg.length(), 0);
+                return ;
+            }
+            else{
+                // here i will ad the client to the channel
+            }
+        
        }
        else{
         // here the meat
@@ -89,7 +114,7 @@ void Server::join(Client *client, Commands cmd){
         }
         // replys basedon the rfc
         // initJOINReply(client, newChannel);
-        channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->gethostname()), name);
+        // channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->gethostname()), name);
         // 
         }
     }
