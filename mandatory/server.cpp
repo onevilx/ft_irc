@@ -229,7 +229,11 @@ void Server::handleCommand(Client* client, Commands& cmd)
         join(client, cmd);
         return;
     }
-
+    // ---------- MODE ----------
+    if (command == "MODE"){
+        mode(client, cmd);
+        return ;
+    }
     // ---------- PING ----------
     if (command == "PING")
     {

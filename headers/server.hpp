@@ -49,6 +49,7 @@ class Server
     void    run();
     //big boss
     void join(Client *client, Commands cmd);
+    void mode(Client *client, Commands cmd);
     // dazai's method to validate the addition of a channel so i can look for 
     //the name of channels inside a server
     bool exists(std::string name);

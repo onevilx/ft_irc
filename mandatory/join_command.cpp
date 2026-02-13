@@ -90,6 +90,13 @@ void Server::initJOINReply(Client *user, Channel *channel){
 void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
+   if(args.size() < 1 || args[0].empty()){
+    // rfc response
+    std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
+    send(client->getFd(), msg.c_str(), msg.length(), 0);
+    // std::cout << "need params err" << std::endl;
+    return;
+   }
     
 
     std::stringstream ss(args[0]);
@@ -106,15 +113,15 @@ void Server::join(Client *client, Commands cmd){
     }
     */
    // here the error handler
-   if(args.size() < 1 || args[0].empty()){
-    // rfc response
-    std::cout << "need params err" << std::endl;
-    return;
-   }
    Cnames = split(args[0], ",");
+   for (std::vector<std::string>::iterator i = Cnames.begin() ; i != Cnames.end(); i++)
+   {
+    std::cout << (*i) << std::endl;
+   }
+   
    for (std::vector<std::string>::iterator it = Cnames.begin(); it != Cnames.end(); ++it){
     if(args.size() == 1){
-        std::string name = args[0];
+        std::string name = *it;
         if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos){
             // std::cout << "prefix error" << std::endl;
             std::string msg = ERROR_NOSUCHCHANNEL(client->getHostname(), name, client->getNickname());
@@ -126,7 +133,7 @@ void Server::join(Client *client, Commands cmd){
             if(isClinetinChannel(client, name)){
                 std::string msg = ERROR_USERONCHANNEL(client->getHostname(), name, client->getNickname());
                 send(client->getFd(), msg.c_str(), msg.length(), 0);
-                return ;
+                continue;
             }
             else{
                 // here i will ad the client to the channel
