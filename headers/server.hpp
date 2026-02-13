@@ -20,6 +20,7 @@ class Channel;
 class Server
 {
     private:
+    std::string                 _creationTime;
     int                         _serverFd;
     int                         _port;
     std::string                 _password;

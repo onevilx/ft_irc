@@ -62,6 +62,17 @@ Server::Server(int port, const std::string& password)
     if (listen(_serverFd, SOMAXCONN) < 0)
         throw std::runtime_error("listen failed");
 
+    // 🔥 ADD THIS PART
+    time_t now = time(NULL);
+    struct tm* gmt = gmtime(&now);
+
+    char buffer[100];
+    strftime(buffer, sizeof(buffer),
+             "%a, %d %b %Y %H:%M:%S UTC",
+             gmt);
+
+    _creationTime = buffer;
+
     pollfd pfd;
     pfd.fd = _serverFd;
     pfd.events = POLLIN;
@@ -139,8 +150,6 @@ void Server::receiveData(int fd)
     }
 }
 
-
-
 void    Server::sendToclient(int fd, std::string msg){
     if(send(fd, msg.c_str(), msg.length(), 0) == 1)
         return ;
@@ -175,6 +184,44 @@ void Server::handleCommand(Client* client, Commands& cmd)
     // ===============================
     // REGISTERED CLIENT
     // ===============================
+
+    // ---------- NICK (change after registration) ----------
+    if (command == "NICK")
+    {
+        if (args.empty())
+        {
+            std::string msg = ERROR_NEEDMOREPARAMS(
+                client->getNickname(),
+                "NICK"
+            );
+            send(client->getFd(), msg.c_str(), msg.size(), 0);
+            return;
+        }
+
+        std::string newNick = stripTrailingColon(args[0]);
+
+        Client* existing = findClientByNick(newNick);
+        if (existing && existing != client)
+        {
+            std::string err = ERROR_NICKNAMEINUSE(
+                client->getNickname(),
+                std::string("server")
+            );
+            send(client->getFd(), err.c_str(), err.size(), 0);
+            return;
+        }
+
+        std::string oldNick = client->getNickname();
+        client->setNickname(newNick);
+
+        std::string msg = ":" + oldNick + "!" +
+                        client->getUsername() + "@" +
+                        client->getHostname() +
+                        " NICK :" + newNick + "\r\n";
+
+        send(client->getFd(), msg.c_str(), msg.size(), 0);
+        return;
+    }
 
     // ---------- JOIN ----------
     if (command == "JOIN")
@@ -323,6 +370,9 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
         std::string yourhost = REPLY_YOURHOST(nick, std::string("server"));
         send(client->getFd(), yourhost.c_str(), yourhost.size(), 0);
+
+        std::string created = REPLY_CREATED( nick, std::string("localhost"), _creationTime);
+        send(client->getFd(), created.c_str(), created.size(), 0);
 
         std::cout << "[AUTH] fd " << client->getFd() << " authenticated" << std::endl;
     }
