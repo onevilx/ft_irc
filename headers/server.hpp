@@ -34,6 +34,7 @@ class Server
     void    handleCommand(Client* client, Commands& cmd);
     void    handleAuth(Client* client, Commands& cmd);
     Client* findClientByNick(const std::string& nick) const;
+    Channel* findChannel(const std::string& name);
     static std::string toUpper(const std::string& s);
     static std::string stripTrailingColon(const std::string& s);
 

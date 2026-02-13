@@ -1,4 +1,5 @@
 #include "../headers/channel.hpp"
+#include "../headers/server.hpp"
 
     bool Channel::get_k(){
         return k;
@@ -56,8 +57,8 @@ bool Channel::addtoChannel(Client *client, std::string key){
     bool shoulbeop = Clients.empty();
     // here i need to set it as operator if the house is empty
     client->set_operator(shoulbeop);
-    Client *newClient = new Client(*client);
-    Clients.push_back(newClient);
+    // Client *newClient = new Client(*client); hada bohdo li drt lih commentaire a copy constructor wla ikhan bash ykhdm topic
+    Clients.push_back(client);
     return true;
 }
 
@@ -93,3 +94,54 @@ Channel::Channel(const Channel& copy){
 Channel::~Channel(){
 
 } 
+
+const std::string& Channel::get_topic() const
+{
+    return _topic;
+}
+
+void Channel::set_topic(const std::string& topic)
+{
+    _topic = topic;
+}
+
+bool Channel::isMember(Client* client) const
+{
+    for (size_t i = 0; i < Clients.size(); ++i)
+    {
+        if (Clients[i] == client)
+            return true;
+    }
+    return false;
+}
+
+bool Channel::isOperator(Client* client) const
+{
+    if (!isMember(client))
+        return false;
+    return client->get_operator();
+}
+
+void Channel::broadcast(const std::string& msg)
+{
+    for (size_t i = 0; i < Clients.size(); ++i)
+    {
+        send(Clients[i]->getFd(), msg.c_str(), msg.size(), 0);
+    }
+}
+
+void Channel::set_topic_setter(const std::string& setter) {
+    topic_setter = setter;
+}
+
+void Channel::set_topic_time(const std::string& time) {
+    topic_time = time;
+}
+
+std::string Channel::get_topic_setter() {
+    return topic_setter;
+}
+
+std::string Channel::get_topic_time() {
+    return topic_time;
+}

@@ -15,7 +15,7 @@ class Channel
     std::vector<Client *>  Clients;// this would be the users insde a channel
     // here i will figure if i need to store moderstors in a single vector or seek another apraoch 
     // we'll figure it later
-    std::string topic;
+    std::string _topic;
     std::string topic_setter;
     std::string topic_time;
     std::string channelTime; //to store the time which the channel got created 
@@ -55,10 +55,10 @@ class Channel
 
     // normal setters
     std::string set_Cname();
-    std::string set_topic(std::string topic);
-    std::string set_topic_setter();
-    std::string set_topic_time();
+    void set_topic_setter(const std::string& setter);
+    void set_topic_time(const std::string& time);
     std::string set_Ctime();
+    void set_topic(const std::string& topic);
 
     void init_modes();
     // getters
@@ -67,15 +67,16 @@ class Channel
     bool get_l();
     bool get_t();
     std::string get_Cname();
-    std::string get_topic();
+    const std::string& get_topic() const;
     std::string get_topic_setter();
     std::string get_topic_time();
     std::string get_Ctime();
 
     bool addtoChannel(Client *Client, std::string key);
     std::string get_channel_mode();
-    
-    
+    bool isMember(Client* client) const;
+    bool isOperator(Client* client) const;
+    void broadcast(const std::string& msg);    
 
 
 };
