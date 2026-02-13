@@ -43,6 +43,8 @@ class Server
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
     void    sendToclient(int fd, std::string msg);
     bool    isClinetinChannel(Client *user, std::string name);
+    void    initJOINReply(Client *user,Channel *channel);
+    std::string Clientsnamebuilder(Channel *channel);
     void    run();
     //big boss
     void join(Client *client, Commands cmd);

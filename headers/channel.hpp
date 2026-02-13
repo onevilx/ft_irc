@@ -73,6 +73,7 @@ class Channel
     std::string get_Ctime();
 
     bool addtoChannel(Client *Client, std::string key);
+    std::string get_channel_mode();
     
     
 

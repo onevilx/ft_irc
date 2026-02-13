@@ -155,3 +155,7 @@ void Client::set_operator(bool status)
 {
     _isop = status;
 }
+
+bool        Client::get_operator(){
+    return this->_isop;
+}

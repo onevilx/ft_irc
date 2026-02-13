@@ -52,6 +52,41 @@ bool    Server::isClinetinChannel(Client *user, std::string name){
         return false;
 }
 
+std::string Server::Clientsnamebuilder(Channel *channel){
+    std::string reply;
+    std::vector<Client *> clients = channel->get_ClientsinChannel();
+    for (std::vector<Client *>::iterator iter = clients.begin(); iter != clients.end(); iter++)
+    {
+        Client* client = *iter; 
+        if(client->get_operator()){
+             if (reply.empty())
+                reply += "@" + client->getNickname();
+            else
+                reply += " @" + client->getNickname();
+        }
+        else{
+             if (reply.empty())
+                reply += client->getNickname();
+            else
+                reply += " " + client->getNickname();
+        }
+    }
+    return reply;
+}
+
+void Server::initJOINReply(Client *user, Channel *channel){
+    std::string msg1; std::string msg2; std::string msg3; std::string msg4;
+    // msg1 = REPLY_WELCOME(user->getNickname(), name);
+    msg1 = REPLY_JOIN(user->getNickname(), user->getUsername(), channel->get_Cname(), user->getHostname());
+    send(user->getFd(), msg1.c_str(), msg1.length(), 0);
+    msg2 =  REPLY_CHANNELMODES(user->getHostname(), channel->get_Cname(), user->getNickname(), channel->get_channel_mode()); // maybe to set later cause i need modes
+    send(user->getFd(), msg2.c_str(), msg2.length(), 0);
+    msg3 = REPLY_NAMREPLY(user->getHostname(),  Clientsnamebuilder(channel), channel->get_Cname(), user->getNickname());
+    send(user->getFd(), msg3.c_str(), msg3.length(), 0);
+    msg4 = REPLY_ENDOFNAMES(user->getHostname(), user->getNickname(), channel->get_Cname());
+    send(user->getFd(), msg4.c_str(), msg4.length(), 0);
+} 
+
 void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
@@ -99,6 +134,7 @@ void Server::join(Client *client, Commands cmd){
                 for (std::vector<Channel*>::iterator iter1 = channels.begin(); iter1 != channels.end(); iter1++){
                     if((*iter1)->get_Cname() == name){
                         (*iter1)->addtoChannel(client, "");
+                        initJOINReply(client,  (*iter1));
                         std::string msg = REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname());
                         for (std::vector<Client*>::iterator c = (*iter1)->get_ClientsinChannel().begin(); c != (*iter1)->get_ClientsinChannel().end(); c++)
                         {
@@ -126,7 +162,7 @@ void Server::join(Client *client, Commands cmd){
             std::cout << channels[i]->get_Cname() << std::endl;
         }
         // replys basedon the rfc
-        // initJOINReply(client, newChannel);
+        initJOINReply(client,  newChannel);
         channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname()), name);
         // 
         }

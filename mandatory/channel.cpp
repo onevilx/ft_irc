@@ -17,6 +17,21 @@ std::vector<Client *>& Channel::get_ClientsinChannel(){
     return this->Clients;
 }
 
+
+std::string Channel::get_channel_mode()
+{
+	std::string mode_rtn = "+";
+	if (this->get_i() == true)
+		mode_rtn += "i";
+	if (this->get_k() == true)
+		mode_rtn += "k";
+	if (this->get_l() == true)
+		mode_rtn += "l";
+	if (this->get_t() == true)
+		mode_rtn += "t";
+	return (mode_rtn);
+}
+
 bool channel_nrestriction(std::string str){
     for (int i; i < str.length(); i++)
         if(str[i] == ':' || str[i] == 7)

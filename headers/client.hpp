@@ -59,6 +59,7 @@ public:
 
     // ---- Operator ----
     void        set_operator(bool status);
+    bool        get_operator();
 };
 
 #endif
