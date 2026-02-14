@@ -39,6 +39,7 @@ class Server
 
     public:
     Server(int port, const std::string& password);
+    std::vector<Channel *>& get_channels();
     ~Server();
 
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
@@ -46,6 +47,7 @@ class Server
     bool    isClinetinChannel(Client *user, std::string name);
     void    initJOINReply(Client *user,Channel *channel);
     std::string Clientsnamebuilder(Channel *channel);
+    Channel * get_single_channel(std::string to_fetch);
     void    run();
     //big boss
     void join(Client *client, Commands cmd);

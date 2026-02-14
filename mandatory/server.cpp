@@ -166,9 +166,12 @@ void Server::handleCommand(Client* client, Commands& cmd)
     // ===============================
     if (!client->isAuthenticated())
     {
-        if (command == "PASS" || command == "NICK" || command == "USER")
+        if (command == "PASS" )
         {
             handleAuth(client, cmd);
+        }
+        else if (command == "NICK" || command == "USER"){
+             handleAuth(client, cmd);
         }
         else
         {
@@ -317,6 +320,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
             return;
         }
         client->setPassOk();
+
     }
     else if (c == "NICK")
     {

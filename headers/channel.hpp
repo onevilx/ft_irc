@@ -5,6 +5,7 @@
 #include "client.hpp"
 #include <iostream>
 #include <vector>
+#include <sstream>
 // here ineed a client class 
 class Client;
 
@@ -29,6 +30,7 @@ class Channel
     std::string key;
     bool l;// limit a jmmi
     bool t;//topic restrict
+    // bool o;
 
     size_t limit; // this will be trigred if the l is setted as true 
 
@@ -40,8 +42,11 @@ class Channel
     Channel(const Channel& copy);
     ~Channel();
 
+    void setTheChannelTimeCreated();
     //setters to true 
     void set_i_on();
+    void set_limit(std::string limit);
+    void get_limit();
     void set_k_on();
     void set_k(std::string Val);
     void set_l_on();
@@ -70,7 +75,7 @@ class Channel
     std::string get_topic();
     std::string get_topic_setter();
     std::string get_topic_time();
-    std::string get_Ctime();
+    std::string getCreationTime();
 
     bool addtoChannel(Client *Client, std::string key);
     std::string get_channel_mode();

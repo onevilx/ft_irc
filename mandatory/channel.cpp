@@ -74,6 +74,10 @@ std::string Channel::get_Cname(){
     return this->Cname;
 }
 
+std::string Channel::getCreationTime(){
+    return this->channelTime;
+}
+
 void Channel::init_modes(){
     this->l = false;
     this->i = false;
@@ -84,8 +88,18 @@ Channel::Channel(){
     this->key = "";
     init_modes();
 }
+void Channel::setTheChannelTimeCreated()
+{
+    time_t present_time;
+    present_time = time(NULL);
+    std::ostringstream oss;
+    oss << present_time;
+    std::string time_now = oss.str();
+    this->channelTime = time_now;
+}
 Channel::Channel(std::string name, std::string pas): Cname(name), key(pas){
     init_modes();
+    setTheChannelTimeCreated();
 }
 Channel::Channel(const Channel& copy){
 
@@ -93,3 +107,19 @@ Channel::Channel(const Channel& copy){
 Channel::~Channel(){
 
 } 
+
+    void Channel::set_i_on(){
+        this->i = true;
+    }
+    void Channel::set_k_on(){
+    this->k = true;
+    }
+    void Channel::set_k(std::string Val){
+        this->key = Val;
+    }
+    void Channel::set_l_on(){
+        this->l = true;
+    }
+    void Channel::set_t_on(){
+        this->t = true;
+    }
