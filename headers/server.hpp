@@ -43,7 +43,7 @@ class Server
     ~Server();
 
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
-    void    sendToclient(int fd, std::string msg);
+    void    sendToclient(int fd,const std::string& msg);
     bool    isClinetinChannel(Client *user, std::string name);
     void    initJOINReply(Client *user,Channel *channel);
     std::string Clientsnamebuilder(Channel *channel);
@@ -55,6 +55,8 @@ class Server
     bool exists(std::string name);
     // here i will be creating channels;
     Channel* creat_channel();
+    void handleTopic(Client* client, Commands& cmd);
+    void handlePrivmsg(Client* client, Commands& cmd);
 };
 
 #endif
