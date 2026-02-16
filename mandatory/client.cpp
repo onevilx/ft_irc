@@ -3,8 +3,8 @@
 // -------------------- Constructor & Destructor --------------------
 
 Client::Client(int fd)
-    : _hostname("localhost"),
-      _servername("server"),
+    : _hostname(""),
+      _servername(""),
       _realname(""),
       _fd(fd),
       _nickname(""),
@@ -158,4 +158,9 @@ void Client::set_operator(bool status)
 
 bool        Client::get_operator(){
     return this->_isop;
+}
+
+bool    Client::isPassOk() const
+{
+    return _passOk;
 }

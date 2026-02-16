@@ -36,6 +36,7 @@ public:
     const std::string& getRealname() const;
 
     bool        isAuthenticated() const;
+    bool        isPassOk() const;
 
     void        appendBuffer(const std::string& data);
     bool        hasCompleteCommand() const;

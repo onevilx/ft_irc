@@ -1,5 +1,6 @@
 #include "../headers/server.hpp"
 #include "../headers/replies.hpp"
+#include "../headers/client.hpp"
 
 void Server::handleAuth(Client* client, Commands& cmd)
 {
@@ -8,14 +9,30 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
     if (c == "PASS")
     {
+        if (client->isPassOk())
+            return; // ignore duplicate PASS
+
         if (a.empty() || a[0] != _password)
         {
-            std::string err = ERROR_PASSWDMISMATCH(client->getNickname(), client->getHostname());
+            std::string err = ERROR_PASSWDMISMATCH(
+                client->getNickname(), client->getHostname());
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
         }
+
         client->setPassOk();
+        return; // important: stop here
     }
+
+    /* ===== Block everything until PASS is correct ===== */
+    if (!client->isPassOk())
+    {
+        std::string err = ERROR_PASSWDMISMATCH(
+            client->getNickname(), client->getHostname());
+        send(client->getFd(), err.c_str(), err.size(), 0);
+        return;
+    }
+
     else if (c == "NICK")
     {
         if (a.empty())

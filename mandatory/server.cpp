@@ -50,6 +50,8 @@ Client* Server::findClientByNick(const std::string& nick) const
 Server::Server(int port, const std::string& password)
     : _serverFd(-1), _port(port), _password(password)
 {
+    if (port < 1024 || port > 65535)
+        throw std::runtime_error("invalid port, try again!");
     _serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverFd < 0)
         throw std::runtime_error("socket failed");
@@ -228,7 +230,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         {
             std::string msg = ERROR_NEEDMOREPARAMS(
                 client->getNickname(),
-                "NICK"
+                client->getHostname()
             );
             send(client->getFd(), msg.c_str(), msg.size(), 0);
             return;
@@ -241,7 +243,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         {
             std::string err = ERROR_NICKNAMEINUSE(
                 client->getNickname(),
-                std::string("server")
+                client->getHostname()
             );
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
@@ -250,11 +252,11 @@ void Server::handleCommand(Client* client, Commands& cmd)
         std::string oldNick = client->getNickname();
         client->setNickname(newNick);
 
-        std::string msg = ":" + oldNick + "!" +
-                          client->getUsername() + "@" +
-                          client->getHostname() +
-                          " NICK :" + newNick + "\r\n";
-
+        std::string msg = REPLY_NICKCHANGE(
+            oldNick,
+            newNick,
+            client->getHostname()
+        );
         send(client->getFd(), msg.c_str(), msg.size(), 0);
         return;
     }
@@ -291,7 +293,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
     // UNKNOWN COMMAND
     std::string err = ERROR_UNKNOWNCOMMAND(
         client->getNickname(),
-        std::string("server"),
+        client->getHostname(),
         command
     );
     send(client->getFd(), err.c_str(), err.size(), 0);

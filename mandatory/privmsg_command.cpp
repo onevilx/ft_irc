@@ -7,11 +7,7 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
 
     if (args.empty())
     {
-        std::string err =
-            ":" + std::string("server") +
-            " 411 " + client->getNickname() +
-            " PRIVMSG :No recipient given\r\n";
-
+        std::string err = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
         send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
@@ -38,10 +34,9 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
     std::string msg = PRIVMSG_FORMAT(
         client->getNickname(),
         client->getUsername(),
-        "localhost",
+        client->getHostname(),
         targetNick,
         message
     );
-
     send(target->getFd(), msg.c_str(), msg.size(), 0);
 }
