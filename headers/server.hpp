@@ -13,6 +13,13 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
+struct mode_arg
+{
+    char *command;
+    char **args;
+    mode_arg *next;
+};
+
 class Commands;
 class Client;
 class Channel;
