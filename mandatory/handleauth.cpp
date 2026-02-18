@@ -59,8 +59,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
         }
 
         client->setUsername(a[0]);
-        client->setHostname(a[1]);
-        client->setServername(a[2]);
+        client->setServername("ft_irc");
 
         std::string realname = a[3];
         if (!realname.empty() && realname[0] == ':')

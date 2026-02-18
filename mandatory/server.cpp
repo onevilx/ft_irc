@@ -128,19 +128,30 @@ void Server::run()
 
 void Server::acceptNewClient()
 {
-    int fd = accept(_serverFd, NULL, NULL);
+    sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+
+    int fd = accept(_serverFd, (sockaddr*)&addr, &len);
     if (fd < 0)
         return;
 
     fcntl(fd, F_SETFL, O_NONBLOCK);
+
+    // Get client IP
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
 
     pollfd pfd;
     pfd.fd = fd;
     pfd.events = POLLIN;
     _pollFds.push_back(pfd);
 
-    _clients[fd] = new Client(fd);
-    std::cout << "[CONNECT] fd " << fd << std::endl;
+    Client* client = new Client(fd);
+    client->setHostname(ip);
+    _clients[fd] = client;
+
+    std::cout << "[CONNECT] fd " << fd
+              << " IP: " << ip << std::endl;
 }
 
 void Server::receiveData(int fd)
