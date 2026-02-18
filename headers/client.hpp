@@ -5,6 +5,10 @@
 #include <unistd.h>
 #include <string>
 #include <cstring>
+#include <arpa/inet.h>     // inet_aton, htonl, INADDR_LOOPBACK
+#include <netdb.h>         // gethostbyaddr, hostent
+#include <netinet/in.h>    // struct in_addr
+#include <sys/socket.h>    // AF_INE
 
 class Client
 {
@@ -17,6 +21,7 @@ private:
     std::string _username;
     std::string _nickname;
     std::string _buffer;
+    std::string _ipaddress;
 
     bool        _passOk;
     bool        _nickOk;
@@ -61,6 +66,11 @@ public:
     // ---- Operator ----
     void        set_operator(bool status);
     bool        get_operator();
+    
+    //hostname resolution
+    void setIpAddress(const std::string& ip);
+    std::string getIpAddress() const;
+    std::string get_client_host() const;
 };
 
 #endif

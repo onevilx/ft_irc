@@ -15,7 +15,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
         if (a.empty() || a[0] != _password)
         {
             std::string err = ERROR_PASSWDMISMATCH(
-                client->getNickname(), client->getHostname());
+                client->getNickname(), client->get_client_host());
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
         }
@@ -28,7 +28,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
     if (!client->isPassOk())
     {
         std::string err = ERROR_PASSWDMISMATCH(
-            client->getNickname(), client->getHostname());
+            client->getNickname(), client->get_client_host());
         send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
@@ -43,7 +43,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
         if (existing && existing != client)
         {
-            std::string err = ERROR_NICKNAMEINUSE(client->getNickname(), client->getHostname());
+            std::string err = ERROR_NICKNAMEINUSE(client->getNickname(), client->get_client_host());
             send(client->getFd(), err.c_str(), err.size(), 0);
         }
         else
@@ -53,7 +53,7 @@ void Server::handleAuth(Client* client, Commands& cmd)
     {
         if (a.size() < 4)
         {
-            std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
+            std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), client->get_client_host());
             send(client->getFd(), msg.c_str(), msg.size(), 0);
             return;
         }
@@ -72,13 +72,13 @@ void Server::handleAuth(Client* client, Commands& cmd)
 
     if (client->isAuthenticated())
     {
-        std::string welcome = REPLY_WELCOME(client->getNickname(), client->getHostname());
+        std::string welcome = REPLY_WELCOME(client->getNickname(), client->get_client_host());
         send(client->getFd(), welcome.c_str(), welcome.size(), 0);
 
-        std::string yourhost = REPLY_YOURHOST(client->getNickname(), client->getHostname());
+        std::string yourhost = REPLY_YOURHOST(client->getNickname(), client->get_client_host());
         send(client->getFd(), yourhost.c_str(), yourhost.size(), 0);
 
-        std::string created = REPLY_CREATED(client->getNickname(), client->getHostname(), _creationTime);
+        std::string created = REPLY_CREATED(client->getNickname(), client->get_client_host(), _creationTime);
         send(client->getFd(), created.c_str(), created.size(), 0);
     }
 }

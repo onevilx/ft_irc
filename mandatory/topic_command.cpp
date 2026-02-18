@@ -17,7 +17,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
     if (channelName.empty() || (channelName[0] != '#' && channelName[0] != '&'))
     {
         std::string err = ERROR_NOSUCHCHANNEL(
-            client->getHostname(),
+            client->get_client_host(),
             channelName,
             client->getNickname()
         );
@@ -30,7 +30,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
     if (!channel)
     {
         std::string err = ERROR_NOSUCHCHANNEL(
-            client->getHostname(),
+            client->get_client_host(),
             channelName,
             client->getNickname()
         );
@@ -41,7 +41,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
     if (!channel->isMember(client))
     {
         std::string err = ERR_NOTONCHANNEL(
-            client->getHostname(),
+            client->get_client_host(),
             channelName,
             client->getNickname()
         );
@@ -54,13 +54,13 @@ void Server::handleTopic(Client* client, Commands& cmd)
     {
         if (channel->get_topic().empty())
         {
-            std::string reply = RPL_NOTOPIC(client->getHostname(), channelName);
+            std::string reply = RPL_NOTOPIC(client->get_client_host(), channelName);
             send(client->getFd(), reply.c_str(), reply.size(), 0);
         }
         else
         {
             std::string reply = RPL_TOPIC(
-                client->getHostname(),
+                client->get_client_host(),
                 channelName,
                 channel->get_topic()
             );
@@ -70,7 +70,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
                 channel->get_topic_setter(),
                 channel->get_topic_time(),
                 client->getNickname(),
-                client->getHostname(),
+                client->get_client_host(),
                 channelName
             );
             send(client->getFd(), whoTime.c_str(), whoTime.size(), 0);
@@ -84,7 +84,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
     if (channel->get_t() && !channel->isOperator(client))
     {
         std::string err = ERROR_NOPRIVILEGES(
-            client->getHostname(),
+            client->get_client_host(),
             channelName
         );
         send(client->getFd(), err.c_str(), err.size(), 0);
@@ -100,7 +100,7 @@ void Server::handleTopic(Client* client, Commands& cmd)
     std::string msg = ":" +
         client->getNickname() + "!" +
         client->getUsername() + "@" +
-        client->getHostname() +
+        client->get_client_host() +
         " TOPIC " + channelName +
         " :" + newTopic + "\r\n";
 

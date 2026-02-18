@@ -7,14 +7,14 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
 
     if (args.empty())
     {
-        std::string err = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
+        std::string err = ERROR_NEEDMOREPARAMS(client->getNickname(),client->get_client_host());
         send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
 
     if (args.size() < 2)
     {
-        std::string err = ERR_NOTEXTTOSEND(client->getHostname());
+        std::string err = ERR_NOTEXTTOSEND(client->get_client_host());
         send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
@@ -26,7 +26,7 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
 
     if (!target)
     {
-        std::string err = ERR_NOSUCHNICK(client->getHostname(), targetNick);
+        std::string err = ERR_NOSUCHNICK(client->get_client_host(), targetNick);
         send(client->getFd(), err.c_str(), err.size(), 0);
         return;
     }
@@ -34,7 +34,7 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
     std::string msg = PRIVMSG_FORMAT(
         client->getNickname(),
         client->getUsername(),
-        client->getHostname(),
+        client->get_client_host(),
         targetNick,
         message
     );

@@ -164,3 +164,36 @@ bool    Client::isPassOk() const
 {
     return _passOk;
 }
+
+void Client::setIpAddress(const std::string& ip)
+{
+    _ipaddress = ip;
+}
+
+std::string Client::getIpAddress() const
+{
+    return _ipaddress;
+}
+
+std::string Client::get_client_host() const
+{
+    if (_ipaddress.empty())
+        return "unknown";
+
+    struct in_addr addr;
+
+    if (inet_aton(_ipaddress.c_str(), &addr) == 0)
+        return _ipaddress;
+
+    // Loopback check
+    if (addr.s_addr == htonl(INADDR_LOOPBACK))
+        return "localhost";
+
+    struct hostent* hostInfo =
+        gethostbyaddr((const void*)&addr, sizeof(addr), AF_INET);
+
+    if (hostInfo != NULL && hostInfo->h_name != NULL)
+        return std::string(hostInfo->h_name);
+
+    return _ipaddress;
+}

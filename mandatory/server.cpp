@@ -147,7 +147,7 @@ void Server::acceptNewClient()
     _pollFds.push_back(pfd);
 
     Client* client = new Client(fd);
-    client->setHostname(ip);
+    client->setIpAddress(ip);
     _clients[fd] = client;
 
     std::cout << "[CONNECT] fd " << fd
@@ -222,7 +222,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         }
         else
         {
-            std::string err = ERROR_NOTREGISTERED(client->getNickname(), client->getHostname());
+            std::string err = ERROR_NOTREGISTERED(client->getNickname(), client->get_client_host());
             send(client->getFd(), err.c_str(), err.size(), 0);
         }
         return;
@@ -241,7 +241,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         {
             std::string msg = ERROR_NEEDMOREPARAMS(
                 client->getNickname(),
-                client->getHostname()
+                client->get_client_host()
             );
             send(client->getFd(), msg.c_str(), msg.size(), 0);
             return;
@@ -254,7 +254,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         {
             std::string err = ERROR_NICKNAMEINUSE(
                 client->getNickname(),
-                client->getHostname()
+                client->get_client_host()
             );
             send(client->getFd(), err.c_str(), err.size(), 0);
             return;
@@ -266,7 +266,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         std::string msg = REPLY_NICKCHANGE(
             oldNick,
             newNick,
-            client->getHostname()
+            client->get_client_host()
         );
         send(client->getFd(), msg.c_str(), msg.size(), 0);
         return;
@@ -304,7 +304,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
     // UNKNOWN COMMAND
     std::string err = ERROR_UNKNOWNCOMMAND(
         client->getNickname(),
-        client->getHostname(),
+        client->get_client_host(),
         command
     );
     send(client->getFd(), err.c_str(), err.size(), 0);
