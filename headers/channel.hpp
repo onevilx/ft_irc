@@ -14,12 +14,13 @@ class Channel
     private:
     std::string Cname; // there are some conditions to respect in the naming phase
     std::vector<Client *>  Clients;// this would be the users insde a channel
+    std::vector<Client *>  operators;
     // here i will figure if i need to store moderstors in a single vector or seek another apraoch 
     // we'll figure it later
     std::string topic;
     std::string topic_setter;
     std::string topic_time;
-    std::string channelTime; //to store the time which the channel got created 
+    std::string channelTime; //to store the time which the channel got created
 
     int moderators; // here i will track the number of moderator in oe channel
     
@@ -36,6 +37,7 @@ class Channel
 
     public:
     std::vector<Client *>& get_ClientsinChannel();
+    std::vector<Client *>& get_ops();
     // canonical form 
     Channel();
     Channel(std::string name, std::string key);
@@ -43,10 +45,11 @@ class Channel
     ~Channel();
 
     void setTheChannelTimeCreated();
+    void add_operator(Client *op);
     //setters to true 
     void set_i_on();
-    void set_limit(std::string limit);
-    void get_limit();
+    void set_limit(size_t limit);
+    size_t get_limit();
     void set_k_on();
     void set_k(std::string Val);
     void set_l_on();
@@ -56,6 +59,8 @@ class Channel
     void set_k_off();
     void set_l_off();
     void set_t_off();
+
+    void send_toclients(std::string msg);
     
 
     // normal setters
@@ -71,6 +76,7 @@ class Channel
     bool get_i();
     bool get_l();
     bool get_t();
+    std::string get_key_val();
     std::string get_Cname();
     std::string get_topic();
     std::string get_topic_setter();
@@ -79,8 +85,8 @@ class Channel
 
     bool addtoChannel(Client *Client, std::string key);
     std::string get_channel_mode();
-    void apply_mode(char c, char **str, int index, bool tr);
-    
+    void apply_mode(Client *user, char c, char **str, int index, bool tr);
+    size_t count_users();
 
 
 };

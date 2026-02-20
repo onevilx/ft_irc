@@ -17,6 +17,22 @@ std::vector<Client *>& Channel::get_ClientsinChannel(){
     return this->Clients;
 }
 
+std::vector<Client *>& Channel::get_ops(){
+    return this->operators;
+}
+
+void Channel::add_operator(Client *op){
+    this->operators.push_back(op);
+}
+
+void Channel::set_limit(size_t limit){
+    this->limit = limit;
+}
+
+size_t Channel::get_limit(){
+    return this->limit;
+}
+
 
 std::string Channel::get_channel_mode()
 {
@@ -69,6 +85,9 @@ bool check_channel_prefix(std::string Cname){
         return "walla a sa7bi ";
     
 }
+std::string Channel::get_key_val(){
+    return this->key;
+}
 
 std::string Channel::get_Cname(){
     return this->Cname;
@@ -108,6 +127,13 @@ Channel::~Channel(){
 
 } 
 
+size_t Channel::count_users(){
+    size_t i = 0;
+    for (std::vector<Client *>::iterator it = this->Clients.begin(); it != this->Clients.end(); it++)
+        i++;
+    return i;
+}
+
     void Channel::set_i_on(){
         this->i = true;
     }
@@ -122,4 +148,17 @@ Channel::~Channel(){
     }
     void Channel::set_t_on(){
         this->t = true;
+    }
+
+        void Channel::set_i_off(){
+            this->i = false;
+        }
+    void Channel::set_k_off(){
+        this->k = false;
+    }
+    void Channel::set_l_off(){
+        this->l = false;
+    }
+    void Channel::set_t_off(){
+        this->t = false;
     }

@@ -43,6 +43,7 @@ class Server
     Client* findClientByNick(const std::string& nick) const;
     static std::string toUpper(const std::string& s);
     static std::string stripTrailingColon(const std::string& s);
+    Channel * get_channel_by_name(std::string Cname);
 
     public:
     Server(int port, const std::string& password);
