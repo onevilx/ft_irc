@@ -3,7 +3,9 @@
 #include "../headers/commands.hpp"
 #include "../headers/replies.hpp"
 
-// -------------------- Helpers --------------------
+// ==========================================================
+// Helpers
+// ==========================================================
 
 std::string Server::toUpper(const std::string& s)
 {
@@ -26,11 +28,14 @@ Client* Server::findClientByNick(const std::string& nick) const
         return NULL;
 
     std::string want = toUpper(nick);
-    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+
+    for (std::map<int, Client*>::const_iterator it = _clients.begin();
+         it != _clients.end(); ++it)
     {
         Client* c = it->second;
         if (!c)
             continue;
+
         if (!c->getNickname().empty() &&
             toUpper(c->getNickname()) == want)
             return c;
@@ -38,11 +43,15 @@ Client* Server::findClientByNick(const std::string& nick) const
     return NULL;
 }
 
-// -------------------- Server Constructor / Destructor --------------------
+// ==========================================================
+// Constructor / Destructor
+// ==========================================================
 
 Server::Server(int port, const std::string& password)
     : _serverFd(-1), _port(port), _password(password)
 {
+    if (port < 1024 || port > 65535)
+        throw std::runtime_error("invalid port, try again!");
     _serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverFd < 0)
         throw std::runtime_error("socket failed");
@@ -62,7 +71,6 @@ Server::Server(int port, const std::string& password)
     if (listen(_serverFd, SOMAXCONN) < 0)
         throw std::runtime_error("listen failed");
 
-    // 🔥 ADD THIS PART
     time_t now = time(NULL);
     struct tm* gmt = gmtime(&now);
 
@@ -83,12 +91,16 @@ Server::Server(int port, const std::string& password)
 
 Server::~Server()
 {
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    for (std::map<int, Client*>::iterator it = _clients.begin();
+         it != _clients.end(); ++it)
         delete it->second;
+
     close(_serverFd);
 }
 
-// -------------------- Main Loop --------------------
+// ==========================================================
+// Main Loop
+// ==========================================================
 
 void Server::run()
 {
@@ -110,23 +122,36 @@ void Server::run()
     }
 }
 
-// -------------------- Client Handling --------------------
+// ==========================================================
+// Client Handling
+// ==========================================================
 
 void Server::acceptNewClient()
 {
-    int fd = accept(_serverFd, NULL, NULL);
+    sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+
+    int fd = accept(_serverFd, (sockaddr*)&addr, &len);
     if (fd < 0)
         return;
 
     fcntl(fd, F_SETFL, O_NONBLOCK);
+
+    // Get client IP
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
 
     pollfd pfd;
     pfd.fd = fd;
     pfd.events = POLLIN;
     _pollFds.push_back(pfd);
 
-    _clients[fd] = new Client(fd);
-    std::cout << "[CONNECT] fd " << fd << std::endl;
+    Client* client = new Client(fd);
+    client->setIpAddress(ip);
+    _clients[fd] = client;
+
+    std::cout << "[CONNECT] fd " << fd
+              << " IP: " << ip << std::endl;
 }
 
 void Server::receiveData(int fd)
@@ -150,243 +175,10 @@ void Server::receiveData(int fd)
     }
 }
 
-void    Server::sendToclient(int fd, std::string msg){
-    if(send(fd, msg.c_str(), msg.length(), 0) == 1)
-        return ;
-}
-// -------------------- Command Handling --------------------
-
-void Server::handleCommand(Client* client, Commands& cmd)
+void Server::sendToclient(int fd, const std::string& msg)
 {
-    std::string command = toUpper(cmd.getCommand());
-    const std::vector<std::string>& args = cmd.getArgs();
-
-    // ===============================
-    // UNREGISTERED CLIENT
-    // ===============================
-    if (!client->isAuthenticated())
-    {
-        if (command == "PASS" )
-        {
-            handleAuth(client, cmd);
-        }
-        else if (command == "NICK" || command == "USER"){
-             handleAuth(client, cmd);
-        }
-        else
-        {
-            std::string err = ERROR_NOTREGISTERED(
-                std::string("*"),
-                std::string("server")
-            );
-            send(client->getFd(), err.c_str(), err.size(), 0);
-        }
-        return;
-    }
-
-    // ===============================
-    // REGISTERED CLIENT
-    // ===============================
-
-    // ---------- NICK (change after registration) ----------
-    if (command == "NICK")
-    {
-        if (args.empty())
-        {
-            std::string msg = ERROR_NEEDMOREPARAMS(
-                client->getNickname(),
-                "NICK"
-            );
-            send(client->getFd(), msg.c_str(), msg.size(), 0);
-            return;
-        }
-
-        std::string newNick = stripTrailingColon(args[0]);
-
-        Client* existing = findClientByNick(newNick);
-        if (existing && existing != client)
-        {
-            std::string err = ERROR_NICKNAMEINUSE(
-                client->getNickname(),
-                std::string("server")
-            );
-            send(client->getFd(), err.c_str(), err.size(), 0);
-            return;
-        }
-
-        std::string oldNick = client->getNickname();
-        client->setNickname(newNick);
-
-        std::string msg = ":" + oldNick + "!" +
-                        client->getUsername() + "@" +
-                        client->getHostname() +
-                        " NICK :" + newNick + "\r\n";
-
-        send(client->getFd(), msg.c_str(), msg.size(), 0);
-        return;
-    }
-
-    // ---------- JOIN ----------
-    if (command == "JOIN")
-    {
-        join(client, cmd);
-        return;
-    }
-    // ---------- MODE ----------
-    if (command == "MODE"){
-        mode(client, cmd);
-        return ;
-    }
-    // ---------- PING ----------
-    if (command == "PING")
-    {
-        if (!args.empty())
-        {
-            std::string pong = "PONG :" + args[0] + "\r\n";
-            send(client->getFd(), pong.c_str(), pong.size(), 0);
-        }
-        return;
-    }
-
-    // ---------- PRIVMSG ----------
-    if (command == "PRIVMSG")
-    {
-        if (args.empty())
-        {
-            std::string err =
-                ":" + std::string("server") +
-                " 411 " + client->getNickname() +
-                " PRIVMSG :No recipient given\r\n";
-            send(client->getFd(), err.c_str(), err.size(), 0);
-            return;
-        }
-
-        if (args.size() < 2)
-        {
-            std::string err = ERR_NOTEXTTOSEND(std::string("server"));
-            send(client->getFd(), err.c_str(), err.size(), 0);
-            return;
-        }
-        std::string targetNick = stripTrailingColon(args[0]);
-        std::string message    = args[1];
-
-        Client* target = findClientByNick(targetNick);
-        if (!target)
-        {
-            std::string err = ERR_NOSUCHNICK(
-                std::string("server"),
-                targetNick
-            );
-            send(client->getFd(), err.c_str(), err.size(), 0);
-            return;
-        }
-
-        std::string msg = PRIVMSG_FORMAT(
-            client->getNickname(),
-            client->getUsername(),
-            "localhost",
-            targetNick,
-            message
-        );
-        send(target->getFd(), msg.c_str(), msg.size(), 0);
-        return;
-    }
-
-    // ---------- UNKNOWN COMMAND ----------
-    std::string err = ERROR_UNKNOWNCOMMAND(
-        client->getNickname(),
-        std::string("server"),
-        command
-    );
-    send(client->getFd(), err.c_str(), err.size(), 0);
+    send(fd, msg.c_str(), msg.length(), 0);
 }
-
-// -------------------- Authentication --------------------
-
-void Server::handleAuth(Client* client, Commands& cmd)
-{
-    const std::string& c = cmd.getCommand();
-    const std::vector<std::string>& a = cmd.getArgs();
-
-    if (c == "PASS")
-    {
-        if (a.empty() || a[0] != _password)
-        {
-            std::string err = ERROR_PASSWDMISMATCH(
-                std::string("*"),
-                std::string("server")
-            );
-            send(client->getFd(), err.c_str(), err.size(), 0);
-            return;
-        }
-        client->setPassOk();
-
-    }
-    else if (c == "NICK")
-    {
-        if (a.empty())
-            return;
-
-        std::string requested = stripTrailingColon(a[0]);
-        Client* existing = findClientByNick(requested);
-        if (existing && existing != client)
-        {
-            std::string err = ERROR_NICKNAMEINUSE(
-                std::string("*"),
-                std::string("server")
-            );
-            send(client->getFd(), err.c_str(), err.size(), 0);
-        }
-        else
-            client->setNickname(requested);
-    }
-    else if (c == "USER")
-    {
-        if (a.size() < 4)
-        {
-            std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), "USER");
-            send(client->getFd(), msg.c_str(), msg.size(), 0);
-            return;
-        }
-        client->setUsername(a[0]);
-        client->setHostname(a[1]);
-        client->setServername(a[2]);
-
-        std::string realname = a[3];
-        if (!realname.empty() && realname[0] == ':')
-            realname = realname.substr(1);
-        client->setRealname(realname);
-    }
-    else
-    {
-        std::string err = ERROR_NOTREGISTERED(
-            client->getNickname(),
-            std::string("server")
-        );
-        send(client->getFd(), err.c_str(), err.size(), 0);
-        return;
-    }
-
-    client->tryAuthenticate();
-
-    if (client->isAuthenticated())
-    {
-        std::string nick = client->getNickname();
-
-        std::string welcome = REPLY_WELCOME(nick, std::string("server"));
-        send(client->getFd(), welcome.c_str(), welcome.size(), 0);
-
-        std::string yourhost = REPLY_YOURHOST(nick, std::string("server"));
-        send(client->getFd(), yourhost.c_str(), yourhost.size(), 0);
-
-        std::string created = REPLY_CREATED( nick, std::string("localhost"), _creationTime);
-        send(client->getFd(), created.c_str(), created.size(), 0);
-
-        std::cout << "[AUTH] fd " << client->getFd() << " authenticated" << std::endl;
-    }
-}
-
-// -------------------- Disconnect --------------------
 
 void Server::removeClient(int fd)
 {
@@ -407,4 +199,129 @@ void Server::removeClient(int fd)
     }
 
     std::cout << "[DISCONNECT] fd " << fd << std::endl;
+}
+
+// ==========================================================
+// Command Dispatcher
+// ==========================================================
+
+void Server::handleCommand(Client* client, Commands& cmd)
+{
+    std::string command = toUpper(cmd.getCommand());
+
+    // ===============================
+    // UNREGISTERED CLIENT
+    // ===============================
+    if (!client->isAuthenticated())
+    {
+        if (command == "PASS" ||
+            command == "NICK" ||
+            command == "USER")
+        {
+            handleAuth(client, cmd);
+        }
+        else if (command == "NICK" || command == "USER"){
+             handleAuth(client, cmd);
+        }
+        else
+        {
+            std::string err = ERROR_NOTREGISTERED(client->getNickname(), client->get_client_host());
+            send(client->getFd(), err.c_str(), err.size(), 0);
+        }
+        return;
+    }
+
+    // ===============================
+    // REGISTERED CLIENT
+    // ===============================
+
+    // NICK (change after registration)
+    if (command == "NICK")
+    {
+        const std::vector<std::string>& args = cmd.getArgs();
+
+        if (args.empty())
+        {
+            std::string msg = ERROR_NEEDMOREPARAMS(
+                client->getNickname(),
+                client->get_client_host()
+            );
+            send(client->getFd(), msg.c_str(), msg.size(), 0);
+            return;
+        }
+
+        std::string newNick = stripTrailingColon(args[0]);
+
+        Client* existing = findClientByNick(newNick);
+        if (existing && existing != client)
+        {
+            std::string err = ERROR_NICKNAMEINUSE(
+                client->getNickname(),
+                client->get_client_host()
+            );
+            send(client->getFd(), err.c_str(), err.size(), 0);
+            return;
+        }
+
+        std::string oldNick = client->getNickname();
+        client->setNickname(newNick);
+
+        std::string msg = REPLY_NICKCHANGE(
+            oldNick,
+            newNick,
+            client->get_client_host()
+        );
+        send(client->getFd(), msg.c_str(), msg.size(), 0);
+        return;
+    }
+
+    if (command == "JOIN")
+    {
+        join(client, cmd);
+        return;
+    }
+    if (command == "PING")
+    {
+        const std::vector<std::string>& args = cmd.getArgs();
+        if (!args.empty())
+        {
+            std::string pong = "PONG :" + args[0] + "\r\n";
+            send(client->getFd(), pong.c_str(), pong.size(), 0);
+        }
+        return;
+    }
+
+    if (command == "TOPIC")
+    {
+        handleTopic(client, cmd);   // moved to topic.cpp
+        return;
+    }
+
+    if (command == "PRIVMSG")
+    {
+        handlePrivmsg(client, cmd); // moved to privmsg.cpp
+        return;
+    }
+
+    // UNKNOWN COMMAND
+    std::string err = ERROR_UNKNOWNCOMMAND(
+        client->getNickname(),
+        client->get_client_host(),
+        command
+    );
+    send(client->getFd(), err.c_str(), err.size(), 0);
+}
+
+// ==========================================================
+// Channel Lookup
+// ==========================================================
+
+Channel* Server::findChannel(const std::string& name)
+{
+    for (size_t i = 0; i < channels.size(); ++i)
+    {
+        if (channels[i]->get_Cname() == name)
+            return channels[i];
+    }
+    return NULL;
 }

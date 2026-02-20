@@ -41,6 +41,7 @@ class Server
     void    handleCommand(Client* client, Commands& cmd);
     void    handleAuth(Client* client, Commands& cmd);
     Client* findClientByNick(const std::string& nick) const;
+    Channel* findChannel(const std::string& name);
     static std::string toUpper(const std::string& s);
     static std::string stripTrailingColon(const std::string& s);
     Channel * get_channel_by_name(std::string Cname);
@@ -51,7 +52,7 @@ class Server
     ~Server();
 
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
-    void    sendToclient(int fd, std::string msg);
+    void    sendToclient(int fd,const std::string& msg);
     bool    isClinetinChannel(Client *user, std::string name);
     void    initJOINReply(Client *user,Channel *channel);
     std::string Clientsnamebuilder(Channel *channel);
@@ -65,6 +66,8 @@ class Server
     bool exists(std::string name);
     // here i will be creating channels;
     Channel* creat_channel();
+    void handleTopic(Client* client, Commands& cmd);
+    void handlePrivmsg(Client* client, Commands& cmd);
 };
 
 #endif
