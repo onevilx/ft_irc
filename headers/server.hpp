@@ -65,6 +65,7 @@ class Server
     bool exists(std::string name);
     // here i will be creating channels;
     Channel* creat_channel();
+    void inv(Client *client, Commands cmd);
 };
 
 #endif
