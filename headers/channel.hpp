@@ -6,15 +6,19 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include "server.hpp"
 // here ineed a client class 
 class Client;
+class Server;
 
 class Channel
 {
     private:
+    Server* _server;
     std::string Cname; // there are some conditions to respect in the naming phase
     std::vector<Client *>  Clients;// this would be the users insde a channel
     std::vector<Client *>  operators;
+    std::vector<Client *>  invited;
     // here i will figure if i need to store moderstors in a single vector or seek another apraoch 
     // we'll figure it later
     std::string _topic;
@@ -38,9 +42,12 @@ class Channel
     public:
     std::vector<Client *>& get_ClientsinChannel();
     std::vector<Client *>& get_ops();
+    std::vector<Client *>& get_inv();
+    bool is_client_in_channel(Client * user);
+    bool is_operator(Client * user);
     // canonical form 
     Channel();
-    Channel(std::string name, std::string key);
+    Channel(Server *server,std::string name, std::string key);
     Channel(const Channel& copy);
     ~Channel();
 
@@ -90,6 +97,8 @@ class Channel
     bool isMember(Client* client) const;
     bool isOperator(Client* client) const;
     void broadcast(const std::string& msg);    
+    Client * get_client(char *str);
+    
 
 
 };

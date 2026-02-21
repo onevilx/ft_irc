@@ -2,7 +2,7 @@ NAME = ircserv
 CC = c++
 RM = rm -f
 CPPFLAGS = 
-SOURCES = mandatory/client.cpp mandatory/server.cpp mandatory/commands.cpp main.cpp mandatory/join_command.cpp mandatory/channel.cpp mandatory/handleauth.cpp \
+SOURCES = mandatory/client.cpp mandatory/server.cpp mandatory/commands.cpp main.cpp mandatory/join_command.cpp mandatory/channel.cpp mandatory/invite_command.cpp mandatory/handleauth.cpp \
  			mandatory/mode_command.cpp  mandatory/privmsg_command.cpp mandatory/topic_command.cpp
 INCLUDES = headers/client.hpp headers/server.hpp headers/commands.hpp headers/channel.hpp 
 

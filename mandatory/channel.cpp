@@ -56,7 +56,13 @@ bool channel_nrestriction(std::string str){
     return true;
 }
 
-bool is_client_in_channel(std::vector<Client *> Cleints, int fd){
+Client * Channel::get_client(char *str){
+    for(std::vector<Client *>::iterator itr = this->get_ClientsinChannel().begin(); itr != this->get_ClientsinChannel().end(); itr++)
+        if((*itr)->getNickname() == str)
+            return (*itr);
+}
+
+bool is_client_in_channel1(std::vector<Client *> Cleints, int fd){
     for (size_t i = 0; i < Cleints.size(); i++)
         if(Cleints[i]->getFd() == fd)
             return true;
@@ -64,7 +70,7 @@ bool is_client_in_channel(std::vector<Client *> Cleints, int fd){
 }
 
 bool Channel::addtoChannel(Client *client, std::string key){
-    if(is_client_in_channel(Clients, client->getFd()))
+    if(is_client_in_channel1(Clients, client->getFd()))
         return false;
     if(get_k() == true){
         // later
@@ -117,7 +123,7 @@ void Channel::setTheChannelTimeCreated()
     std::string time_now = oss.str();
     this->channelTime = time_now;
 }
-Channel::Channel(std::string name, std::string pas): Cname(name), key(pas){
+Channel::Channel(Server *server,std::string name, std::string pas): _server(server), Cname(name), key(pas){
     init_modes();
     setTheChannelTimeCreated();
 }

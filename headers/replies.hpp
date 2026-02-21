@@ -16,7 +16,7 @@
 #define ERROR_NONICKNAMEGIVEN(nick, hostname) ":" + hostname + " 431 " + nick + " :No nickname given !\r\n"
 #define ERROR_NICKNAMEINUSE(nick, hostname) ":" + hostname + " 433 " + nick + " :Nickname is already in use !\r\n"
 #define REPLY_NICKCHANGE(oldNick, nick, hostname) ":" + oldNick + "!~u@" + hostname + " NICK " + nick + "\r\n"
-#define ERROR_NEEDMOREPARAMS(nick, hostname) std::string(":") + hostname + " 461 " + nick + " :Not enough parameters !\r\n"
+#define ERROR_NEEDMOREPARAMS(nick, hostname) (std::string(":") + hostname + " 461 " + nick + " :Not enough parameters !\r\n")
 
 #define PART_REPLY(nickname, username, hostname, channel, reason) ":" + std::string(nickname) + "!~" + std::string(username) + "@" + std::string(hostname) + " PART " + std::string(channel) + " :" + reason + "\r\n"
 

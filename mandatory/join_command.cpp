@@ -74,6 +74,16 @@ std::string Server::Clientsnamebuilder(Channel *channel){
     return reply;
 }
 
+bool  is_invited(Client * client, Channel *cl){
+    for (std::vector<Client *>::iterator itr = cl->get_inv().begin(); itr != cl->get_inv().end(); itr++ )
+    {
+        if((*itr)->getNickname() == client->getNickname())
+            return true;
+    }
+    return false;
+    
+}
+
 void Server::initJOINReply(Client *user, Channel *channel){
     std::string msg1; std::string msg2; std::string msg3; std::string msg4;
     // msg1 = REPLY_WELCOME(user->getNickname(), name);
@@ -134,7 +144,7 @@ void Server::join(Client *client, Commands cmd){
         // here i wil check for the channel presence 
        if(exists(name)){
         Channel *cl = this->get_single_channel(name);
-        if(cl->get_i()){
+        if(cl->get_i() && !is_invited(client, cl)){
             std::string msg = ERROR_INVITEONLY(client->getUsername(), cl->get_Cname());
             send(client->getFd(), msg.c_str() , msg.length(), 0);
             return;
@@ -199,13 +209,14 @@ void Server::join(Client *client, Commands cmd){
        else{
         // here the meat
         // i will creat the channel and add the user to it 
-        Channel* newChannel = new Channel(name, "");
+        Channel* newChannel = new Channel(this ,name, "");
         // here i will add the client to the channel
         if(!newChannel->addtoChannel(client, ""))
             continue;  
         
         channels.push_back(newChannel);
         newChannel->set_t_on();
+        newChannel->get_ops().push_back(client);
         std::cout << "--------------------channels--------------------" << std::endl;
         for (size_t i = 0; i < channels.size(); i++)
         {
