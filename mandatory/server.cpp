@@ -237,9 +237,9 @@ void Server::handleCommand(Client* client, Commands& cmd)
         mode(client, cmd);
         return ;
     }
-    if(command == "INVITE"){
-        inv(client, cmd);
-        return;
+    if(command == "INVITE"){ 
+            inv(client, cmd); 
+                return; 
     }
     // ---------- PING ----------
     if (command == "PING")

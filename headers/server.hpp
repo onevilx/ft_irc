@@ -40,12 +40,12 @@ class Server
     void    removeClient(int fd);
     void    handleCommand(Client* client, Commands& cmd);
     void    handleAuth(Client* client, Commands& cmd);
-    Client* findClientByNick(const std::string& nick) const;
     static std::string toUpper(const std::string& s);
     static std::string stripTrailingColon(const std::string& s);
     Channel * get_channel_by_name(std::string Cname);
 
     public:
+    Client* findClientByNick(const std::string& nick) const;
     Server(int port, const std::string& password);
     std::vector<Channel *>& get_channels();
     ~Server();
@@ -64,7 +64,6 @@ class Server
     //the name of channels inside a server
     bool exists(std::string name);
     // here i will be creating channels;
-    Channel* creat_channel();
     void inv(Client *client, Commands cmd);
 };
 

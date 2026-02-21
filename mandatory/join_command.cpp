@@ -199,13 +199,14 @@ void Server::join(Client *client, Commands cmd){
        else{
         // here the meat
         // i will creat the channel and add the user to it 
-        Channel* newChannel = new Channel(name, "");
+        Channel* newChannel = new Channel(this ,name, "");
         // here i will add the client to the channel
         if(!newChannel->addtoChannel(client, ""))
             continue;  
         
         channels.push_back(newChannel);
         newChannel->set_t_on();
+        newChannel->get_ops().push_back(client);
         std::cout << "--------------------channels--------------------" << std::endl;
         for (size_t i = 0; i < channels.size(); i++)
         {

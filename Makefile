@@ -3,7 +3,7 @@ CC = c++
 RM = rm -f
 CPPFLAGS = 
 SOURCES = mandatory/client.cpp mandatory/server.cpp mandatory/commands.cpp main.cpp  mandatory/mode_command.cpp  \
-		mandatory/join_command.cpp mandatory/channel.cpp
+		mandatory/join_command.cpp mandatory/channel.cpp mandatory/invite_command.cpp
 INCLUDES = headers/client.hpp headers/server.hpp headers/commands.hpp headers/channel.hpp 
 
 OBJ = $(SOURCES:.cpp=.opp)

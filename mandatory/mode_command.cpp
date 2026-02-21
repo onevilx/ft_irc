@@ -28,6 +28,8 @@ Channel* Server::get_single_channel(std::string to_fetch){
    for (int i = 0; i < this->channels.size(); i++)
         if(to_fetch == this->channels[i]->get_Cname())
             return (this->channels[i]);
+
+    return NULL;
 }
 
 
@@ -174,6 +176,27 @@ bool is_number(std::string str)
     }
 }
 
+bool Channel::is_client_in_channel(Client * user){
+    for(std::vector<Client *>::iterator itr = this->Clients.begin(); itr != this->Clients.end(); itr++)
+        if((*itr)->getNickname() == user->getNickname())
+            return true;
+    return false;
+}
+
+bool Channel::is_operator(Client * user){
+    for(std::vector<Client *>::iterator itr = this->get_ops().begin(); itr != this->get_ops().end(); itr++)
+        if((*itr)->getNickname() == user->getNickname())
+            return true;
+    return false;
+}
+
+bool is_clientinchannel(char *str, Channel *cl){
+    for (std::vector<Client *>::iterator itr = cl->get_ClientsinChannel().begin(); itr != cl->get_ClientsinChannel().end(); itr++)
+        if((*itr)->getNickname() == str)
+            return true;
+    return false;
+}
+
 
 void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
     std::cout << "in apply " << std::endl;
@@ -199,10 +222,59 @@ void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
         send(user->getFd(), msg.c_str(), msg.length(), 0);
     }
     }
-    // else if (c == 'o'){
-        
+    else if (c == 'o'){
+        for (std::vector<Client *>::iterator itr = this->get_ops().begin(); itr != this->get_ops().end(); itr++)
+        {
+            if((*itr)->getNickname() == user->getNickname())
+                {
+                    if(str[indx]){
+                        if(is_client_in_channel(user)){
+                            if(is_operator(user))
+                            {
+                                Client *target = _server->findClientByNick(str[indx]);
+                                if(!target)
+                                {
+                                    std::string msg = ERROR_NOSUCHNICK(user->getHostname(), this->get_Cname(), str[indx]);
+                                    send(user->getFd(), msg.c_str(), msg.length(), 0);
+                                    return ;
+                                }
+                                if(is_clientinchannel(str[indx], this)){
+                                for(std::vector<Client *>::iterator itr = this->get_ClientsinChannel().begin(); itr != this->get_ClientsinChannel().end(); itr++){
+                                        if((*itr)->getNickname() == str[indx])
+                                        {
+                                            this->operators.push_back((*itr));
+                                            std::string msg = REPLY_CHANNELMODES__(user->getUsername(), this->get_Cname(), user->getNickname(), "+o");
+                                            send_toclients(msg);
+                                            return;
 
-    // }
+                                        }
+                                }
+                                }
+                                else{
+                                     std::string msg =ERROR_USERNOTINCHANNEL(user->getHostname(), this->get_Cname());
+                                send(user->getFd(), msg.c_str(), msg.length(), 0);
+
+                                }
+                            }
+                            else{
+                                std::string msg = ERROR_NOPRIVILEGES__(user->getHostname(), this->get_Cname(), str[indx]);
+                                send(user->getFd(), msg.c_str(), msg.length(), 0);
+                            }
+
+                        }
+                        else {
+                            std::string msg = ERROR_NOTONCHANNEL(user->getHostname(), this->get_Cname());
+                            send(user->getFd(), msg.c_str(), msg.length(), 0);
+                            }
+
+                    }
+                    else{
+                        std::string msg = ERROR_INVALIDMODEPARAM(this->get_Cname(), user->getHostname(), "o");
+                        send(user->getFd(), msg.c_str(), msg.length(), 0);
+                    }
+                }
+        }
+    }  
     else if(c == 'k'){
         if(!this->get_k() && str[indx]){
             this->set_k_on();
@@ -246,10 +318,62 @@ else if (!tr){
         std::string msg = REPLY_CHANNELMODES__(user->getUsername(), this->get_Cname(), user->getNickname(), rep);
         send_toclients(msg);
         }
-    // else if (c == 'o'){
-        
+        else if (c == 'o'){
+        for (std::vector<Client *>::iterator itr = this->get_ops().begin(); itr != this->get_ops().end(); itr++)
+        {
+            if((*itr)->getNickname() == user->getNickname())
+                {
+                    if(str[indx]){
+                        if(is_client_in_channel(user)){
+                            if(is_operator(user))
+                            {
+                                Client *target = _server->findClientByNick(str[indx]);
+                                if(!target)
+                                {
+                                    std::string msg = ERROR_NOSUCHNICK(user->getHostname(), this->get_Cname(), str[indx]);
+                                    send(user->getFd(), msg.c_str(), msg.length(), 0);
+                                    return ;
+                                }
+                                
+                                if(is_clientinchannel(str[indx], this)){
+                                    Client *us = get_client(str[indx]);
+                                    if(!is_operator(us))
+                                        return ;
+                                    for(std::vector<Client *>::iterator itr = this->get_ops().begin(); itr != this->get_ops().end(); itr++){
+                                        if((*itr)->getNickname() == str[indx])
+                                        {
+                                            this->get_ops().erase(itr);
+                                            std::string msg = REPLY_CHANNELMODES__(user->getUsername(), this->get_Cname(), user->getNickname(), "-o");
+                                            send_toclients(msg);
+                                            return;
+                                        }
+                                    }
+                                    }
+                                    else{
+                                        std::string msg =ERROR_USERNOTINCHANNEL(user->getHostname(), this->get_Cname());
+                                        send(user->getFd(), msg.c_str(), msg.length(), 0);
 
-    // }
+                                }
+                            }
+                            else{
+                                std::string msg = ERROR_NOPRIVILEGES__(user->getHostname(), this->get_Cname(), str[indx]);
+                                send(user->getFd(), msg.c_str(), msg.length(), 0);
+                            }
+
+                        }
+                        else {
+                            std::string msg = ERROR_NOTONCHANNEL(user->getHostname(), this->get_Cname());
+                            send(user->getFd(), msg.c_str(), msg.length(), 0);
+                            }
+
+                    }
+                    else{
+                        std::string msg = ERROR_INVALIDMODEPARAM(this->get_Cname(), user->getHostname(), "o");
+                        send(user->getFd(), msg.c_str(), msg.length(), 0);
+                    }
+                }
+        }
+    }  
     else if(c == 'k'){
         if(str[indx]){
             if(!this->get_k()){
