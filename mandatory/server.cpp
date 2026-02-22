@@ -6,6 +6,7 @@
 // ==========================================================
 // Helpers
 // ==========================================================
+bool Server::_running = true;
 
 std::string Server::toUpper(const std::string& s)
 {
@@ -20,6 +21,23 @@ std::string Server::stripTrailingColon(const std::string& s)
     if (!s.empty() && s[0] == ':')
         return s.substr(1);
     return s;
+}
+
+void Server::signalHandler(int signum)
+{
+    (void)signum;
+    _running = false;
+}
+
+void Server::stop()
+{
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        close(it->first);
+        delete it->second;
+    }
+    _clients.clear();
+    close(_serverFd);
 }
 
 Client* Server::findClientByNick(const std::string& nick) const
@@ -104,7 +122,7 @@ Server::~Server()
 
 void Server::run()
 {
-    while (true)
+    while (_running)
     {
         if (poll(&_pollFds[0], _pollFds.size(), -1) < 0)
             throw std::runtime_error("poll failed");
@@ -134,8 +152,6 @@ void Server::acceptNewClient()
     int fd = accept(_serverFd, (sockaddr*)&addr, &len);
     if (fd < 0)
         return;
-
-    fcntl(fd, F_SETFL, O_NONBLOCK);
 
     // Get client IP
     char ip[INET_ADDRSTRLEN];

@@ -10,10 +10,12 @@ int main(int ac, char **av)
 
     int port = std::atoi(av[1]);
     std::string password = av[2];
+    signal(SIGPIPE, SIG_IGN);
     try
     {
         Server server(port, password);
         server.run();
+        server.stop();
     }
     catch (const std::exception& e)
     {
