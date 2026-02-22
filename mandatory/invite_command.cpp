@@ -9,10 +9,6 @@ std::vector<Client *>& Channel::get_inv(){
 }
 void    Server::inv(Client *client, Commands cmd){
     std::vector<std::string> arg = cmd.getArgs();
-    // so the logic here will arse this INVITE nick_name channel
-
-    // arg[1] == nicknaem;
-    // arg[2] == channel_
 
     if(arg.empty() || arg.size() < 2){
         send(client->getFd(), ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname()).c_str(), \

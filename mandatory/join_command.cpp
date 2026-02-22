@@ -4,6 +4,22 @@
 #include "../headers/replies.hpp"
 // #include "../headers/commands.hpp"
 
+void Server::leave_all_channels(Client *user){
+    for (std::vector<Channel *>::iterator itr1 = this->get_channels().begin(); itr1 != this->get_channels().end(); itr1++){
+        for (std::vector<Client *>::iterator itr2 = (*itr1)->get_ClientsinChannel().begin(); itr2 != (*itr1)->get_ClientsinChannel().end(); itr2++)
+        {
+            if((*itr2)->getNickname() == user->getNickname()){
+                std::string msg = PART_REPLY((*itr2)->getNickname(), (*itr2)->getUsername(), (*itr2)->getHostname(), (*itr1)->get_Cname(), "");
+                (*itr1)->send_toclients(msg);
+                (*itr1)->get_ClientsinChannel().erase(itr2);
+                break;
+            }
+        }
+        
+    }
+}
+
+
 bool Server::exists(std::string name) {
     for (int i = 0; i < this->channels.size(); i++)
         if(name == this->channels[i]->get_Cname())
@@ -41,13 +57,14 @@ void Server::channel_msg(Client *user, const std::string msg, std::string Cname)
 bool    Server::isClinetinChannel(Client *user, std::string name){
         for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); it++)
         {
+            if((*it)->get_Cname() == name){
             for (std::vector<Client*>::iterator iter = (*it)->get_ClientsinChannel().begin(); iter != (*it)->get_ClientsinChannel().end(); iter++)
             {
-                if((*iter)->getFd() == user->getFd())
+                if((*iter)->getNickname() == user->getNickname())
                     // // here the mesage of the clinet is already in the channel
                     // std::cout << "rah deja kayn had khona " << std::endl;
                     return true;
-            }
+            }}
         }
         return false;
 }
@@ -117,13 +134,11 @@ void Server::join(Client *client, Commands cmd){
     std::vector<std::string> Cnames;
 
 
-    /* 
-    zero logic to inject later
     if(n == "0"){
-        joinzero(client);
+       leave_all_channels(client);
         return;
     }
-    */
+    
    // here the error handler
    Cnames = split(args[0], ",");
 
@@ -150,9 +165,11 @@ void Server::join(Client *client, Commands cmd){
             return;
         }
         if(cl->get_l()){
-            if(cl->get_limit() > cl->count_users())
-                ;
+            if(cl->count_users() >= cl->get_limit()){
+                 std::string msg = ERROR_CHANNELISFULL(client->getNickname(), cl->get_Cname());
+                 send(client->getFd(), msg.c_str() , msg.length(), 0);
                 return;
+            }
         }
             if(isClinetinChannel(client, name)){
                 std::string msg = ERROR_USERONCHANNEL(client->get_client_host(), name, client->getNickname());

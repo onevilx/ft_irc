@@ -285,6 +285,14 @@ void Server::handleCommand(Client* client, Commands& cmd)
         mode(client, cmd);
         return ;
     }
+    if(command == "KICK"){
+        kick(client, cmd);
+        return ;
+    }
+    if(command == "PART"){
+        part(client, cmd);
+        return ;
+    }
     if(command == "INVITE"){ 
             inv(client, cmd); 
                 return; 

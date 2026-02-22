@@ -50,7 +50,7 @@ class Server
     Server(int port, const std::string& password);
     std::vector<Channel *>& get_channels();
     ~Server();
-
+    void    delete_channel_if_no_still(Channel *cl);
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
     void    sendToclient(int fd,const std::string& msg);
     bool    isClinetinChannel(Client *user, std::string name);
@@ -69,6 +69,11 @@ class Server
     void handleTopic(Client* client, Commands& cmd);
     void handlePrivmsg(Client* client, Commands& cmd);
     void inv(Client *client, Commands cmd);
+    void kick(Client *user, Commands cmd);
+    void leave_all_channels(Client *user);
+    void part(Client *client, Commands cmd);
 };
+
+std::vector<std::string> split(std::string args, std::string delimiter);
 
 #endif
