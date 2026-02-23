@@ -337,6 +337,9 @@ else if (!tr){
                                 
                                 if(is_clientinchannel(str[indx], this)){
                                     Client *us = get_client(str[indx]);
+                                    if(!us){
+                                        return ;
+                                    }
                                     if(!is_operator(us))
                                         return ;
                                     for(std::vector<Client *>::iterator itr = this->get_ops().begin(); itr != this->get_ops().end(); itr++){
@@ -434,6 +437,8 @@ void Server::mode(Client *client, Commands cmd){
         std::cout << "here 3"  << std::endl;
         if(exists(args[0])){
             Channel *cl = get_single_channel(args[0]);
+            if(!cl)
+                return;
             std::string rp = REPLY_CHANNELMODES(client->getHostname(), cl->get_Cname(), client->getNickname(), cl->get_channel_mode());
             send(client->getFd(), rp.c_str(), rp.length(), 0);
             std::string rp1 = REPLY_CREATIONTIME(client->getHostname(), cl->get_Cname(), client->getNickname(), cl->getCreationTime());

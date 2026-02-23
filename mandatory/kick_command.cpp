@@ -4,21 +4,6 @@
 #include "../headers/replies.hpp"
 
 
-
-void Server::delete_channel_if_no_still(Channel *cl){
-    if(cl->get_ClientsinChannel().size() == 0)
-    {
-        for (std::vector<Channel * >::iterator itr = this->get_channels().begin(); itr != this->get_channels().end(); itr++)
-        {
-            if((*itr)->get_Cname() == cl->get_Cname()){
-                this->get_channels().erase(itr);
-                break ;
-            }
-        }
-        
-    }
-}
-
 void Server::kick(Client *user, Commands cmd){
     std::vector<std::string> args = cmd.getArgs();
 
@@ -75,7 +60,6 @@ void Server::kick(Client *user, Commands cmd){
         std::string msg = REPLY_KICK(user->getNickname(), user->getUsername(), user->getHostname(), cl->get_Cname(), target->getUsername(), "no comment is given");
         cl->send_toclients(msg);
         send(target->getFd(), msg.c_str(), msg.length(), 0);
-        delete_channel_if_no_still(cl);
     }
     else{
         std::string str = ERROR_NOPRIVILEGES(user->getHostname(), cl->get_Cname());

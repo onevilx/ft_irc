@@ -278,6 +278,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
     if (command == "JOIN")
     {
         join(client, cmd);
+        cleanup_empty_channels();
         return;
     }
     // ---------- MODE ----------
@@ -287,10 +288,12 @@ void Server::handleCommand(Client* client, Commands& cmd)
     }
     if(command == "KICK"){
         kick(client, cmd);
+        cleanup_empty_channels();
         return ;
     }
     if(command == "PART"){
         part(client, cmd);
+        cleanup_empty_channels();
         return ;
     }
     if(command == "INVITE"){ 

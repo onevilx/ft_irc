@@ -60,6 +60,7 @@ Client * Channel::get_client(char *str){
     for(std::vector<Client *>::iterator itr = this->get_ClientsinChannel().begin(); itr != this->get_ClientsinChannel().end(); itr++)
         if((*itr)->getNickname() == str)
             return (*itr);
+    return NULL;
 }
 
 bool is_client_in_channel1(std::vector<Client *> Cleints, int fd){
@@ -84,14 +85,6 @@ bool Channel::addtoChannel(Client *client, std::string key){
     return true;
 }
 
-
-bool check_channel_prefix(std::string Cname){
-    char c = Cname[0];
-
-    if(c != '&' && c !='#' && c != '+' && c != '!' )
-        return "walla a sa7bi ";
-    
-}
 std::string Channel::get_key_val(){
     return this->key;
 }

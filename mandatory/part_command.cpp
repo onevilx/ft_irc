@@ -4,6 +4,21 @@
 #include "../headers/replies.hpp"
 
 
+void Server::cleanup_empty_channels()
+{
+    for (std::vector<Channel*>::iterator it = this->channels.begin();
+         it != channels.end(); )
+    {
+        if ((*it)->get_ClientsinChannel().empty())
+        {
+            delete *it;
+            it = channels.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
 void Server::part(Client *client, Commands cmd){
     std::vector<std::string> args = cmd.getArgs();
 
@@ -25,12 +40,18 @@ void Server::part(Client *client, Commands cmd){
                         std::string msg = PART_REPLY(client->getNickname(), client->getUsername(), client->getHostname(), cl->get_Cname(), "");
                         send(client->getFd(), msg.c_str(), msg.length(), 0);
                         cl->send_toclients(msg);
-                        // here i need to handle operator
-                        delete_channel_if_no_still(cl);
                         break;
                     }
                 }
+                for (std::vector<Client *>::iterator itr2 = (cl)->get_ops().begin(); itr2 != (cl)->get_ops().end(); itr2++)
+                {
+                if((*itr2)->getNickname() == client->getNickname()){
+                    (cl)->get_ops().erase(itr2);
+                    break;
+                }
+                }
             }
+            
         }
         else{
             // 403

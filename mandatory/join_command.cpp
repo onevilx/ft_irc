@@ -2,7 +2,7 @@
 #include "../headers/client.hpp"
 #include "../headers/server.hpp"
 #include "../headers/replies.hpp"
-// #include "../headers/commands.hpp"
+#include "../headers/commands.hpp"
 
 void Server::leave_all_channels(Client *user){
     for (std::vector<Channel *>::iterator itr1 = this->get_channels().begin(); itr1 != this->get_channels().end(); itr1++){
@@ -15,10 +15,17 @@ void Server::leave_all_channels(Client *user){
                 break;
             }
         }
-        
+    }
+    for(std::vector<Channel *>::iterator itr1 = this->get_channels().begin(); itr1 != this->get_channels().end(); itr1++){
+        for (std::vector<Client *>::iterator itr2 = (*itr1)->get_ops().begin(); itr2 != (*itr1)->get_ops().end(); itr2++)
+        {
+            if((*itr2)->getNickname() == user->getNickname()){
+                (*itr1)->get_ops().erase(itr2);
+                break;
+            }
+        }
     }
 }
-
 
 bool Server::exists(std::string name) {
     for (int i = 0; i < this->channels.size(); i++)
@@ -118,45 +125,27 @@ void Server::join(Client *client, Commands cmd){
 
     std::vector<std::string> args = cmd.getArgs();
    if(args.size() < 1 || args[0].empty()){
-    // rfc response
     std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
     send(client->getFd(), msg.c_str(), msg.length(), 0);
-    // std::cout << "need params err" << std::endl;
     return;
    }
-    for(std::vector<std::string>::iterator it = args.begin(); it != args.end(); it++)
-        std::cout << (*it) << std::endl;
-
-
     std::stringstream ss(args[0]);
     std::string n;
     ss >> n;
     std::vector<std::string> Cnames;
-
-
     if(n == "0"){
        leave_all_channels(client);
         return;
     }
-    
-   // here the error handler
    Cnames = split(args[0], ",");
-
-   for (std::vector<std::string>::iterator i = Cnames.begin() ; i != Cnames.end(); i++)
-   {
-    std::cout << (*i) << std::endl;
-   }
-   
    for (std::vector<std::string>::iterator it = Cnames.begin(); it != Cnames.end(); ++it){
     if(args.size() >= 1){
         std::string name = *it;
         if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos){
-            // std::cout << "prefix error" << std::endl;
             std::string msg = ERROR_NOSUCHCHANNEL(client->get_client_host(), name, client->getNickname());
             send(client->getFd(), msg.c_str(), msg.length(), 0);
-            return ; // error to be aaded later;
+            return ;
         }
-        // here i wil check for the channel presence 
        if(exists(name)){
         Channel *cl = this->get_single_channel(name);
         if(cl->get_i() && !is_invited(client, cl)){
@@ -166,10 +155,11 @@ void Server::join(Client *client, Commands cmd){
         }
         if(cl->get_l()){
             if(cl->count_users() >= cl->get_limit()){
-                 std::string msg = ERROR_CHANNELISFULL(client->getNickname(), cl->get_Cname());
-                 send(client->getFd(), msg.c_str() , msg.length(), 0);
+                std::string msg = ERROR_CHANNELISFULL(client->getNickname(), cl->get_Cname());
+                send(client->getFd(), msg.c_str() , msg.length(), 0);
                 return;
             }
+            // continue;
         }
             if(isClinetinChannel(client, name)){
                 std::string msg = ERROR_USERONCHANNEL(client->get_client_host(), name, client->getNickname());
@@ -205,8 +195,6 @@ void Server::join(Client *client, Commands cmd){
                         }
                         }
                 else{
-                // here i will ad the client to the channel
-                // so here i will add the client in the chanel_clinets container aftr that i will send the join message to every client except the current client
                 for (std::vector<Channel*>::iterator iter1 = channels.begin(); iter1 != channels.end(); iter1++){
                     if((*iter1)->get_Cname() == name){
                         (*iter1)->addtoChannel(client, "");
@@ -224,13 +212,9 @@ void Server::join(Client *client, Commands cmd){
         
        }
        else{
-        // here the meat
-        // i will creat the channel and add the user to it 
         Channel* newChannel = new Channel(this ,name, "");
-        // here i will add the client to the channel
         if(!newChannel->addtoChannel(client, ""))
             continue;  
-        
         channels.push_back(newChannel);
         newChannel->set_t_on();
         newChannel->get_ops().push_back(client);
@@ -240,10 +224,8 @@ void Server::join(Client *client, Commands cmd){
             
             std::cout << channels[i]->get_Cname() << std::endl;
         }
-        // replys basedon the rfc
         initJOINReply(client,  newChannel);
         channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->get_client_host()), name);
-        // 
         }
     }
     }
