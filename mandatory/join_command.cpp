@@ -53,10 +53,9 @@ void Server::channel_msg(Client *user, const std::string msg, std::string Cname)
         if((*it)->get_Cname() == Cname)
             for (size_t i = 0; i < (*it)->get_ClientsinChannel().size(); i++)
         {
-            // so the logic here i will send the join message to any client
-            // in the channel excepts the current joining client
+
             if((*it)->get_ClientsinChannel()[i]->getNickname()  != user->getNickname())
-                    sendToclient((*it)->get_ClientsinChannel()[i]->getFd(), msg);// send the message
+                    sendToclient((*it)->get_ClientsinChannel()[i]->getFd(), msg);
         }
     }
 }
@@ -68,8 +67,6 @@ bool    Server::isClinetinChannel(Client *user, std::string name){
             for (std::vector<Client*>::iterator iter = (*it)->get_ClientsinChannel().begin(); iter != (*it)->get_ClientsinChannel().end(); iter++)
             {
                 if((*iter)->getNickname() == user->getNickname())
-                    // // here the mesage of the clinet is already in the channel
-                    // std::cout << "rah deja kayn had khona " << std::endl;
                     return true;
             }}
         }
@@ -159,7 +156,6 @@ void Server::join(Client *client, Commands cmd){
                 send(client->getFd(), msg.c_str() , msg.length(), 0);
                 return;
             }
-            // continue;
         }
             if(isClinetinChannel(client, name)){
                 std::string msg = ERROR_USERONCHANNEL(client->get_client_host(), name, client->getNickname());
@@ -218,12 +214,6 @@ void Server::join(Client *client, Commands cmd){
         channels.push_back(newChannel);
         newChannel->set_t_on();
         newChannel->get_ops().push_back(client);
-        std::cout << "--------------------channels--------------------" << std::endl;
-        for (size_t i = 0; i < channels.size(); i++)
-        {
-            
-            std::cout << channels[i]->get_Cname() << std::endl;
-        }
         initJOINReply(client,  newChannel);
         channel_msg(client, REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->get_client_host()), name);
         }

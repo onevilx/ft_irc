@@ -73,14 +73,8 @@ bool is_client_in_channel1(std::vector<Client *> Cleints, int fd){
 bool Channel::addtoChannel(Client *client, std::string key){
     if(is_client_in_channel1(Clients, client->getFd()))
         return false;
-    if(get_k() == true){
-        // later
-        std::cout << "key required" << std::endl;
-    }
     bool shoulbeop = Clients.empty();
-    // here i need to set it as operator if the house is empty
     client->set_operator(shoulbeop);
-    // Client *newClient = new Client(*client); hada bohdo li drt lih commentaire a copy constructor wla ikhan bash ykhdm topic
     Clients.push_back(client);
     return true;
 }

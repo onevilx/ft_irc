@@ -123,12 +123,34 @@ mode_arg *parse_modes(std::vector<std::string> &input)
     return head;
 }
 
+void free_mode_list(mode_arg *head)
+{
+    while (head)
+    {
+        mode_arg *next = head->next;
+
+        if (head->command)
+            delete[] head->command;
+
+        if (head->args)
+        {
+            for (int i = 0; head->args[i]; ++i)
+                delete[] head->args[i];
+
+            delete[] head->args;
+        }
+
+        delete head;
+        head = next;
+    }
+}
+
+
 std::string normalize_modes(const std::string &raw)
 {
     std::string plusBlock;
     std::string minusBlock;
     char currentSign = 0;
-    std::cout << "here normal" << std::endl;
     for (size_t i = 0; i < raw.size(); ++i)
     {
         if (raw[i] == '+' || raw[i] == '-')
@@ -160,7 +182,6 @@ std::string normalize_modes(const std::string &raw)
 
 bool is_number(std::string str)
 {
-    std::cout << "here2" << std::endl;
 	if (str[0] == '+')
 		str = str.substr(1, str.size());
 	size_t found = str.find_first_not_of("0123456789");
@@ -199,10 +220,8 @@ bool is_clientinchannel(char *str, Channel *cl){
 
 
 void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
-    std::cout << "in apply " << std::endl;
     if(is_operator(user)){
         if(tr){
-        std::cout << "+ block" << std::endl;
          if(c == 'l'){
         if(str[indx]){
         std::string rep_mo = "+l";
@@ -310,7 +329,6 @@ void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
     }
 }
 else if (!tr){
-    std::cout << "- block " << std::endl;
      if(c == 'l'){
         if(!this->get_l())
             return;
@@ -407,7 +425,7 @@ else if (!tr){
     else if(c == 't'){
         if(this->get_t()){
             this->set_t_off();
-            std::string msg = REPLY_CHANNELMODES__(user->getUsername(), this->get_Cname(), user->getNickname(), this->get_channel_mode());
+            std::string msg = REPLY_CHANNELMODES__(user->getUsername(), this->get_Cname(), user->getNickname(), "-t");
             send_toclients(msg);
         }
     }
@@ -432,14 +450,11 @@ else{
 void Server::mode(Client *client, Commands cmd){
     std::vector<Channel *> channls = this->get_channels();
     std::vector<std::string> args = cmd.getArgs();
-   std::cout << "here 1"  << std::endl;
     if(args.size() < 1){
-        std::cout << "here 2"  << std::endl;
         std::string msg = ERROR_NEEDMOREPARAMS(client->getNickname(), client->getHostname());
         send(client->getFd(), msg.c_str(), msg.length(), 0);
     }
     if(args.size() == 1){
-        std::cout << "here 3"  << std::endl;
         if(exists(args[0])){
             Channel *cl = get_single_channel(args[0]);
             if(!cl)
@@ -457,12 +472,10 @@ void Server::mode(Client *client, Commands cmd){
         }
     }
     if(args.size() > 1){
-        std::cout << "here 4"  << std::endl;
         if(exists(args[0])){
         Channel *cl = get_single_channel(args[0]);
         args.erase(args.begin());
         int i = 0;
-        // std::cout << args[0] <<  "-------------------------------------------------------------------------"<< std::endl;
         while(args[0][i] && args[0][i] != '-' && args[0][i] != '+')
         {
             if(args[0][i] != 'i' && args[0][i] != 'k' && args[0][i] != 't' && args[0][i] != 'o' && args[0][i] != 'l')
@@ -476,38 +489,34 @@ void Server::mode(Client *client, Commands cmd){
         if(args[0].empty())
             return;
         args[0] = normalize_modes(args[0]);
-        std::cout << args[0] << std::endl;
         mode_arg *list =  parse_modes(args);
-        std::cout << list->command << std::endl;
-        
-      // here i wiil inject my logic that gets command sequence like this -lk+oi -lk +o
-
-
-      while (list)
+        mode_arg *tmp = list;
+      while (tmp)
       {
-        std::cout << "here 5"  << std::endl;
+
         bool tr;
-        std::cout << list->command << std::endl;
-        std::cout << "insideiloop" << std::endl;
-       if(list->command[0] == '+')
+       if(tmp->command[0] == '+')
             tr = true;
-       else if (list->command[0] == '-')
+       else if (tmp->command[0] == '-')
             tr = false;
-       for (size_t i = 1; list->command[i]; i++)
+       for (size_t i = 1; tmp->command[i]; i++)
        {
-        if(list->command[i] != 'i' && list->command[i] != 'k' && list->command[i] != 't' && list->command[i] != 'o' && list->command[i] != 'l')
+        if(tmp->command[i] != 'i' && tmp->command[i] != 'k' && tmp->command[i] != 't' && tmp->command[i] != 'o' && tmp->command[i] != 'l')
           {
-              std::string msg = ERR_UNKNOWNMODE(client->getNickname(), client->getHostname(), cl->get_Cname(), list->command[i]);
+              std::string msg = ERR_UNKNOWNMODE(client->getNickname(), client->getHostname(), cl->get_Cname(), tmp->command[i]);
               send(client->getFd(), msg.c_str(), msg.length(), 0);
           }
+        else if (cl->is_client_in_channel(client)){
+          cl->apply_mode(client,tmp->command[i], tmp->args, i - 1 , tr);
+        }
         else{
-            std::cout << "apply block" << std::endl;
-          cl->apply_mode(client,list->command[i], list->args, i - 1 , tr); // here i need to pass the index as the - or + case
+            std::string msg = ERROR_NOTONCHANNEL(client->getHostname(), cl->get_Cname());
+            send(client->getFd(), msg.c_str(), msg.length(), 0);
         }
        }
-       
-       list = list->next;
+       tmp = tmp->next;
       }
+      free_mode_list(list);
     }
 }
 }
