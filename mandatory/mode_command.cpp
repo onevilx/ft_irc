@@ -200,9 +200,10 @@ bool is_clientinchannel(char *str, Channel *cl){
 
 void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
     std::cout << "in apply " << std::endl;
-    if(tr){
+    if(is_operator(user)){
+        if(tr){
         std::cout << "+ block" << std::endl;
-    if(c == 'l'){
+         if(c == 'l'){
         if(str[indx]){
         std::string rep_mo = "+l";
         if(is_number(str[indx])){
@@ -422,7 +423,11 @@ else if (!tr){
 }
 
 }
-
+else{
+    std::string msg = ERROR_NOPRIVILEGES(user->getHostname(), this->get_Cname());
+    send(user->getFd(), msg.c_str(), msg.length(), 0);
+}
+}
 
 void Server::mode(Client *client, Commands cmd){
     std::vector<Channel *> channls = this->get_channels();
