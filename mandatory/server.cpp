@@ -298,6 +298,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
     }
     if(command == "INVITE"){ 
             inv(client, cmd); 
+            
                 return; 
     }
     // ---------- PING ----------
