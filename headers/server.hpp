@@ -34,6 +34,7 @@ class Server
     std::vector<struct pollfd>  _pollFds;
     std::map<int, Client *>      _clients; // khoya chre7 liya 3lach katsavihom as map 
     std::vector< Channel * > channels; // here is the channels inside a server
+    static bool _running;
 
     void    acceptNewClient();
     void    receiveData(int fd);
@@ -50,6 +51,9 @@ class Server
     Server(int port, const std::string& password);
     std::vector<Channel *>& get_channels();
     ~Server();
+
+    static void signalHandler(int signum);
+    void stop();
     void    channel_msg(Client *user, const std::string msg, std::string Cname);
     void    sendToclient(int fd,const std::string& msg);
     bool    isClinetinChannel(Client *user, std::string name);
