@@ -65,7 +65,7 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
         for (std::vector<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)
         {
             if (*it != client)
-                send((*it)->getFd(), message.c_str(), message.length(), 0);
+                send((*it)->getFd(), formattedMsg.c_str(), formattedMsg.length(), 0);
         }
         return;
     }
