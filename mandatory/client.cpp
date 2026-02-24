@@ -22,7 +22,7 @@ Client::~Client()
 
 std::string Client::getHostname() const
 {
-    return _hostname;
+    return get_client_host();
 }
 
 const std::string& Client::getServername() const
