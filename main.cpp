@@ -1,12 +1,7 @@
 #include "headers/server.hpp"
 
-
-void f(){
-    system("leaks ircserv");
-}
 int main(int ac, char **av)
 {
-    atexit(f);
     if (ac != 3)
     {
         std::cerr << "Usage: ./ircserv <port> <password>\n";
@@ -15,7 +10,7 @@ int main(int ac, char **av)
 
     int port = std::atoi(av[1]);
     std::string password = av[2];
-    signal(SIGPIPE, SIG_IGN);
+   signal(SIGPIPE, SIG_IGN);
     try
     {
         Server server(port, password);

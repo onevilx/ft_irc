@@ -1,1 +1,24 @@
-dazai tasks 
+dazai tasks :
+# mode #oussama +lkoi 
+: 696 #oussama l * You must specify a parameter for the limit mode. Syntax: <limit>.
+
+
+:pickme!r@ KICK #oussama r :no comment is given
+join #oussama
+:jojo!~r@ JOIN #oussama
+: 324 jojo #oussama +t
+: 353 jojo = #oussama :koko pickme jojo // pickme should have @ 
+: 366 jojo #oussama :END of /NAMES list
+
+
+
+// mode #oussama +kl key
+ should set the key and display error for limit
+
+
+join #
+
+
+join #oussama,oussama,#koko,33434,#_sdsdsd 
+:localhost 443 lolo #oussama  :is already on channel
+:localhost 403 lolo oussama :No such channel
