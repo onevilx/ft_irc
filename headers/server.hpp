@@ -32,8 +32,8 @@ class Server
     int                         _port;
     std::string                 _password;
     std::vector<struct pollfd>  _pollFds;
-    std::map<int, Client *>      _clients; // khoya chre7 liya 3lach katsavihom as map 
-    std::vector< Channel * > channels; // here is the channels inside a server
+    std::map<int, Client *>      _clients;
+    std::vector< Channel * > channels;
     static bool _running;
 
     void    acceptNewClient();
@@ -61,13 +61,9 @@ class Server
     std::string Clientsnamebuilder(Channel *channel);
     Channel * get_single_channel(std::string to_fetch);
     void    run();
-    //big boss
     void join(Client *client, Commands cmd);
     void mode(Client *client, Commands cmd);
-    // dazai's method to validate the addition of a channel so i can look for 
-    //the name of channels inside a server
     bool exists(std::string name);
-    // here i will be creating channels;
     Channel* creat_channel();
     void handleTopic(Client* client, Commands& cmd);
     void handlePrivmsg(Client* client, Commands& cmd);

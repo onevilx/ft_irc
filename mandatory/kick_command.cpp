@@ -36,7 +36,6 @@ void Server::kick(Client *user, Commands cmd){
             send(user->getFd(), str.c_str(), str.length(), 0);
             return;
         }
-            std::cout << "gere" << std::endl;
         for (std::vector<Client *>::iterator itr = cl->get_ClientsinChannel().begin(); itr != cl->get_ClientsinChannel().end(); itr++)
         {
             if((*itr)->getNickname() == target->getNickname()){
@@ -44,7 +43,6 @@ void Server::kick(Client *user, Commands cmd){
                 break;
             }  
         }
-            std::cout << "gere" << std::endl;
         for(std::vector<Client *>::iterator itr = cl->get_ops().begin(); itr != cl->get_ops().end(); itr++){
             if((*itr)->getNickname() == target->getNickname()){
                 cl->get_ops().erase(itr);

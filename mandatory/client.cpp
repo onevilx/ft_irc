@@ -1,7 +1,5 @@
 #include "../headers/client.hpp"
 
-// -------------------- Constructor & Destructor --------------------
-
 Client::Client(int fd)
     : _hostname(""),
       _servername(""),
@@ -21,8 +19,6 @@ Client::~Client()
 {
     close(_fd);
 }
-
-// -------------------- Getters --------------------
 
 std::string Client::getHostname() const
 {
@@ -59,7 +55,6 @@ const std::string& Client::getUsername() const
     return _username;
 }
 
-// -------------------- Setters for USER fields --------------------
 
 void Client::setHostname(const std::string& host)
 {
@@ -75,8 +70,6 @@ void Client::setRealname(const std::string& real)
 {
     _realname = real;
 }
-
-// -------------------- Buffer Handling --------------------
 
 void Client::appendBuffer(const std::string& data)
 {
@@ -110,8 +103,6 @@ std::string Client::extractCommand()
     return command;
 }
 
-// -------------------- Authentication Setters --------------------
-
 void Client::setPassOk()
 {
     _passOk = true;
@@ -127,8 +118,6 @@ void Client::setUserOk()
     _userOk = true;
 }
 
-// -------------------- Nickname & Username --------------------
-
 void Client::setNickname(const std::string& nick)
 {
     _nickname = nick;
@@ -141,15 +130,11 @@ void Client::setUsername(const std::string& user)
     _userOk = true;
 }
 
-// -------------------- Authentication Logic --------------------
-
 void Client::tryAuthenticate()
 {
     if (_passOk && _nickOk && _userOk)
         _authenticated = true;
 }
-
-// -------------------- Operator --------------------
 
 void Client::set_operator(bool status)
 {

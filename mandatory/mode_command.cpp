@@ -1,24 +1,6 @@
 #include "../headers/server.hpp"
 #include "../headers/replies.hpp"
 
-/*
-MODE - Change the channel’s mode:
-· i: Set/remove Invite-only channel
-· t: Set/remove the restrictions of the TOPIC command to channel operators
-· k: Set/remove the channel key (password)
-· o: Give/take channel operator privilege
-· l: Set/remove the user limit to channel
-
-*/
-
-/*
-    so the logic wil be as this: 
-
-    i will process the commands from the left to the right 
-
-
-*/
-
 
 std::vector<Channel *>& Server::get_channels(){
     return this->channels;

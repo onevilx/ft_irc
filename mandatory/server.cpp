@@ -3,9 +3,6 @@
 #include "../headers/commands.hpp"
 #include "../headers/replies.hpp"
 
-// ==========================================================
-// Helpers
-// ==========================================================
 bool Server::_running = true;
 
 std::string Server::toUpper(const std::string& s)
@@ -61,10 +58,6 @@ Client* Server::findClientByNick(const std::string& nick) const
     return NULL;
 }
 
-// ==========================================================
-// Constructor / Destructor
-// ==========================================================
-
 Server::Server(int port, const std::string& password)
     : _serverFd(-1), _port(port), _password(password)
 {
@@ -116,10 +109,6 @@ Server::~Server()
     close(_serverFd);
 }
 
-// ==========================================================
-// Main Loop
-// ==========================================================
-
 void Server::run()
 {
     while (_running)
@@ -140,10 +129,6 @@ void Server::run()
     }
 }
 
-// ==========================================================
-// Client Handling
-// ==========================================================
-
 void Server::acceptNewClient()
 {
     sockaddr_in addr;
@@ -153,7 +138,6 @@ void Server::acceptNewClient()
     if (fd < 0)
         return;
 
-    // Get client IP
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
 
@@ -217,17 +201,10 @@ void Server::removeClient(int fd)
     std::cout << "[DISCONNECT] fd " << fd << std::endl;
 }
 
-// ==========================================================
-// Command Dispatcher
-// ==========================================================
-
 void Server::handleCommand(Client* client, Commands& cmd)
 {
     std::string command = toUpper(cmd.getCommand());
 
-    // ===============================
-    // UNREGISTERED CLIENT
-    // ===============================
     if (!client->isAuthenticated())
     {
         if (command == "PASS" ||
@@ -247,11 +224,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
         return;
     }
 
-    // ===============================
-    // REGISTERED CLIENT
-    // ===============================
-
-    // NICK (change after registration)
     if (command == "NICK")
     {
         const std::vector<std::string>& args = cmd.getArgs();
@@ -297,7 +269,7 @@ void Server::handleCommand(Client* client, Commands& cmd)
         cleanup_empty_channels();
         return;
     }
-    // ---------- MODE ----------
+
     if (command == "MODE"){
         mode(client, cmd);
         return ;
@@ -316,7 +288,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
             inv(client, cmd); 
                 return; 
     }
-    // ---------- PING ----------
     if (command == "PING")
     {
         const std::vector<std::string>& args = cmd.getArgs();
@@ -330,17 +301,16 @@ void Server::handleCommand(Client* client, Commands& cmd)
 
     if (command == "TOPIC")
     {
-        handleTopic(client, cmd);   // moved to topic.cpp
+        handleTopic(client, cmd);
         return;
     }
 
     if (command == "PRIVMSG")
     {
-        handlePrivmsg(client, cmd); // moved to privmsg.cpp
+        handlePrivmsg(client, cmd);
         return;
     }
 
-    // UNKNOWN COMMAND
     std::string err = ERROR_UNKNOWNCOMMAND(
         client->getNickname(),
         client->get_client_host(),
@@ -348,10 +318,6 @@ void Server::handleCommand(Client* client, Commands& cmd)
     );
     send(client->getFd(), err.c_str(), err.size(), 0);
 }
-
-// ==========================================================
-// Channel Lookup
-// ==========================================================
 
 Channel* Server::findChannel(const std::string& name)
 {

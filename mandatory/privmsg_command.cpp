@@ -5,8 +5,6 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
 {
     const std::vector<std::string>& args = cmd.getArgs();
 
-    // PRIVMSG <target> :<message>
-
     if (args.empty())
     {
         std::string err = ERROR_NEEDMOREPARAMS(
@@ -29,7 +27,6 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
     std::string targetName = stripTrailingColon(args[0]);
     std::string message    = args[1];
 
-    // Build formatted message once
     std::string formattedMsg = PRIVMSG_FORMAT(
         client->getNickname(),
         client->getUsername(),
@@ -38,9 +35,6 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
         message
     );
 
-    // =========================
-    // 1️⃣ CHANNEL MESSAGE
-    // =========================
     if (!targetName.empty() && targetName[0] == '#')
     {
         Channel* channel = findChannel(targetName);
@@ -55,7 +49,6 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
             return;
         }
 
-        // Check if sender is in the channel
         if (!channel->isMember(client))
         {
             std::string err = ERROR_NOSUCHCHANNEL(
@@ -67,7 +60,6 @@ void Server::handlePrivmsg(Client* client, Commands& cmd)
             return;
         }
 
-        // Send to all members except sender
         std::vector<Client*>& members = channel->get_ClientsinChannel();
 
         for (std::vector<Client*>::const_iterator it = members.begin(); it != members.end(); ++it)

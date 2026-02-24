@@ -49,7 +49,6 @@ void Server::handleTopic(Client* client, Commands& cmd)
         return;
     }
 
-    // SHOW TOPIC
     if (args.size() == 1)
     {
         if (channel->get_topic().empty())
@@ -78,7 +77,6 @@ void Server::handleTopic(Client* client, Commands& cmd)
         return;
     }
 
-    // SET TOPIC
     std::string newTopic = stripTrailingColon(args[1]);
 
     if (channel->get_t() && !channel->isOperator(client))

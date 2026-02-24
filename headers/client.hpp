@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <string>
 #include <cstring>
-#include <arpa/inet.h>     // inet_aton, htonl, INADDR_LOOPBACK
-#include <netdb.h>         // gethostbyaddr, hostent
-#include <netinet/in.h>    // struct in_addr
-#include <sys/socket.h>    // AF_INE
+#include <arpa/inet.h>
+#include <netdb.h>        
+#include <netinet/in.h>    
+#include <sys/socket.h>    
 
 class Client
 {
@@ -35,7 +35,6 @@ public:
 
     int         getFd() const;
 
-    // ---- Host / Identity ----
     std::string getHostname() const;
     const std::string& getServername() const;
     const std::string& getRealname() const;
@@ -47,7 +46,7 @@ public:
     bool        hasCompleteCommand() const;
     std::string extractCommand();
 
-    // ---- Nick / User ----
+
     void        setNickname(const std::string& nick);
     void        setUsername(const std::string& user);
     void        setHostname(const std::string& host);
@@ -57,17 +56,14 @@ public:
     const std::string& getNickname() const;
     const std::string& getUsername() const;
 
-    // ---- Authentication ----
     void        setPassOk();
     void        setNickOk();
     void        setUserOk();
     void        tryAuthenticate();
 
-    // ---- Operator ----
     void        set_operator(bool status);
     bool        get_operator();
-    
-    //hostname resolution
+
     void setIpAddress(const std::string& ip);
     std::string getIpAddress() const;
     std::string get_client_host() const;
