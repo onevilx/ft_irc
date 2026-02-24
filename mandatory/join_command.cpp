@@ -25,10 +25,19 @@ void Server::leave_all_channels(Client *user){
             }
         }
     }
+    for(std::vector<Channel *>::iterator itr1 = this->get_channels().begin(); itr1 != this->get_channels().end(); itr1++){
+        for (std::vector<Client *>::iterator itr2 = (*itr1)->get_inv().begin(); itr2 != (*itr1)->get_inv().end(); itr2++)
+        {
+            if((*itr2)->getNickname() == user->getNickname()){
+                (*itr1)->get_inv().erase(itr2);
+                break;
+            }
+        }
+    }
 }
 
 bool Server::exists(std::string name) {
-    for (int i = 0; i < this->channels.size(); i++)
+    for (size_t i = 0; i < this->channels.size(); i++)
         if(name == this->channels[i]->get_Cname())
             return true;
     return false;
@@ -141,7 +150,7 @@ void Server::join(Client *client, Commands cmd){
         if(name[0] != '#' || name.empty() || name.substr(1).find(" ") != std::string::npos){
             std::string msg = ERROR_NOSUCHCHANNEL(client->get_client_host(), name, client->getNickname());
             send(client->getFd(), msg.c_str(), msg.length(), 0);
-            return ;
+            continue ;
         }
        if(exists(name)){
         Channel *cl = this->get_single_channel(name);
@@ -173,7 +182,7 @@ void Server::join(Client *client, Commands cmd){
                         if(args[1] == cl->get_key_val()){
                             for (std::vector<Channel*>::iterator iter1 = channels.begin(); iter1 != channels.end(); iter1++){
                             if((*iter1)->get_Cname() == name){
-                            (*iter1)->addtoChannel(client, "");
+                            (*iter1)->addtoChannel(client);
                             initJOINReply(client,  (*iter1));
                             std::string msg = REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->getHostname());
                             for (std::vector<Client*>::iterator c = (*iter1)->get_ClientsinChannel().begin(); c != (*iter1)->get_ClientsinChannel().end(); c++)
@@ -193,7 +202,7 @@ void Server::join(Client *client, Commands cmd){
                 else{
                 for (std::vector<Channel*>::iterator iter1 = channels.begin(); iter1 != channels.end(); iter1++){
                     if((*iter1)->get_Cname() == name){
-                        (*iter1)->addtoChannel(client, "");
+                        (*iter1)->addtoChannel(client);
                         initJOINReply(client,  (*iter1));
                         std::string msg = REPLY_JOIN(client->getNickname(), client->getUsername(), name, client->get_client_host());
                         for (std::vector<Client*>::iterator c = (*iter1)->get_ClientsinChannel().begin(); c != (*iter1)->get_ClientsinChannel().end(); c++)
@@ -209,7 +218,7 @@ void Server::join(Client *client, Commands cmd){
        }
        else{
         Channel* newChannel = new Channel(this ,name, "");
-        if(!newChannel->addtoChannel(client, ""))
+        if(!newChannel->addtoChannel(client))
             continue;  
         channels.push_back(newChannel);
         newChannel->set_t_on();

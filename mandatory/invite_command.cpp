@@ -27,12 +27,25 @@ void    Server::inv(Client *client, Commands cmd){
         send(client->getFd(), msg.c_str(), msg.length(), 0);
         return;
     }
+    if(cl->get_i()){
+        if(cl->is_operator(client)){
+        cl->get_inv().push_back(tar);
+        std::string msg =  REPLY_INVITE(client->getNickname(), client->getUsername(), client->getHostname(), tar->getNickname(),cl->get_Cname());
+        send(tar->getFd(), msg.c_str(), msg.length(), 0);
+        std::string msg1  = REPLY_INVITING(client->getHostname(), client->getNickname(), tar->getNickname(), cl->get_Cname());
+        send(client->getFd(), msg1.c_str(), msg1.length(), 0);
+        return ;
+        }
+        else
+        {
+            std::string msg = ERROR_NOPRIVILEGES(client->getHostname(), cl->get_Cname());
+            send(client->getFd(), msg.c_str(), msg.length(), 0);
+            return ;
+        }
+    }
     cl->get_inv().push_back(tar);
     std::string msg =  REPLY_INVITE(client->getNickname(), client->getUsername(), client->getHostname(), tar->getNickname(),cl->get_Cname());
     send(tar->getFd(), msg.c_str(), msg.length(), 0);
     std::string msg1  = REPLY_INVITING(client->getHostname(), client->getNickname(), tar->getNickname(), cl->get_Cname());
     send(client->getFd(), msg1.c_str(), msg1.length(), 0);
-
-
-
 }

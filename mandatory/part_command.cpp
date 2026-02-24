@@ -50,6 +50,14 @@ void Server::part(Client *client, Commands cmd){
                     break;
                 }
                 }
+                for (std::vector<Client *>::iterator itr2 = (cl)->get_inv().begin(); itr2 != (cl)->get_inv().end(); itr2++)
+                {
+                if((*itr2)->getNickname() == client->getNickname()){
+                    (cl)->get_inv().erase(itr2);
+                    break;
+                }
+                }
+                
             }
             
         }

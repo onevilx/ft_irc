@@ -90,7 +90,7 @@ class Channel
     std::string get_topic_time();
     std::string getCreationTime();
 
-    bool addtoChannel(Client *Client, std::string key);
+    bool addtoChannel(Client *Client);
     std::string get_channel_mode();
     void apply_mode(Client *user, char c, char **str, int index, bool tr);
     size_t count_users();

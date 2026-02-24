@@ -50,7 +50,7 @@ std::string Channel::get_channel_mode()
 }
 
 bool channel_nrestriction(std::string str){
-    for (int i; i < str.length(); i++)
+    for (size_t i = 0; i < str.length(); i++)
         if(str[i] == ':' || str[i] == 7)
             return false; // here i will see if i would prefer to throw an error
     return true;
@@ -70,7 +70,7 @@ bool is_client_in_channel1(std::vector<Client *> Cleints, int fd){
     return false;
 }
 
-bool Channel::addtoChannel(Client *client, std::string key){
+bool Channel::addtoChannel(Client *client){
     if(is_client_in_channel1(Clients, client->getFd()))
         return false;
     bool shoulbeop = Clients.empty();
@@ -115,7 +115,7 @@ Channel::Channel(Server *server,std::string name, std::string pas): _server(serv
     setTheChannelTimeCreated();
 }
 Channel::Channel(const Channel& copy){
-
+    (void)copy;
 }
 Channel::~Channel(){
 

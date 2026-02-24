@@ -25,7 +25,7 @@ std::vector<Channel *>& Server::get_channels(){
 }
 
 Channel* Server::get_single_channel(std::string to_fetch){
-   for (int i = 0; i < this->channels.size(); i++)
+   for (size_t i = 0; i < this->channels.size(); i++)
         if(to_fetch == this->channels[i]->get_Cname())
             return (this->channels[i]);
 
@@ -226,7 +226,7 @@ void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
         if(str[indx]){
         std::string rep_mo = "+l";
         if(is_number(str[indx])){
-            if(this->get_limit() != atol(str[indx])){
+            if((long)this->get_limit() != atol(str[indx])){
         rep_mo += " ";
         rep_mo.append(str[indx]);
         this->set_l_on();
@@ -235,6 +235,8 @@ void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
         send_toclients(msg);
         }
         }
+        else
+            return;
     }
     else{
 
@@ -306,9 +308,9 @@ void Channel::apply_mode(Client *user,char c, char **str, int indx, bool tr){
             send_toclients(msg);
         }
         else{
-            return ;
                 std::string msg = ERROR_INVALIDMODEPARAM__KEY(this->get_Cname(),user->getHostname(), "k");
                 send(user->getFd(), msg.c_str(), msg.length(), 0);
+            return ;
             }
     }
     else if(c == 't'){
@@ -447,6 +449,21 @@ else{
 }
 }
 
+
+void shift_args(char **args)
+{
+    if (!args)
+        return;
+
+    int i = 0;
+
+    while (args[i])
+    {
+        args[i] = args[i + 1];
+        i++;
+    }
+}
+
 void Server::mode(Client *client, Commands cmd){
     std::vector<Channel *> channls = this->get_channels();
     std::vector<std::string> args = cmd.getArgs();
@@ -493,7 +510,6 @@ void Server::mode(Client *client, Commands cmd){
         mode_arg *tmp = list;
       while (tmp)
       {
-
         bool tr;
        if(tmp->command[0] == '+')
             tr = true;
@@ -501,13 +517,20 @@ void Server::mode(Client *client, Commands cmd){
             tr = false;
        for (size_t i = 1; tmp->command[i]; i++)
        {
+        int arg_c = 1;
         if(tmp->command[i] != 'i' && tmp->command[i] != 'k' && tmp->command[i] != 't' && tmp->command[i] != 'o' && tmp->command[i] != 'l')
           {
               std::string msg = ERR_UNKNOWNMODE(client->getNickname(), client->getHostname(), cl->get_Cname(), tmp->command[i]);
               send(client->getFd(), msg.c_str(), msg.length(), 0);
           }
         else if (cl->is_client_in_channel(client)){
-          cl->apply_mode(client,tmp->command[i], tmp->args, i - 1 , tr);
+            if(tmp->args[0] == NULL)
+                cl->apply_mode(client,tmp->command[i], tmp->args, 0 , tr);
+            else {
+                cl->apply_mode(client,tmp->command[i], tmp->args, arg_c - 1 , tr);
+                shift_args(tmp->args);
+                arg_c ++;
+            }
         }
         else{
             std::string msg = ERROR_NOTONCHANNEL(client->getHostname(), cl->get_Cname());
