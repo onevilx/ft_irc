@@ -33,4 +33,4 @@ clean:
 fclean: clean
 	$(RM) $(NAME) $(BOT_NAME)
 
-re: fclean all
+re: fclean all# leet_ctf
